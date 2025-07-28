@@ -38,7 +38,9 @@
 <div id="result"></div>
 
 <!--script src="github_issues_list.js"></script-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script-->
+<script src="http://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
+
 <script>
 
 /*
@@ -55,12 +57,14 @@ const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }).toString(Cryp
 console.log("Decrypted:", decrypted);
 */
 
-let key = CryptoJS.enc.Utf8.parse('Secret Passphrase'); // Ensure a strong, randomly generated key in production
-let iv = CryptoJS.lib.WordArray.random(128/8); // Generate a random initialization vector
-let encrypted = CryptoJS.AES.encrypt("This is the message", key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
-let decrypted = CryptoJS.AES.decrypt(encrypted.ciphertext, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
-console.log(encrypted.toString()); // Encrypted ciphertext
-console.log(decrypted.toString(CryptoJS.enc.Utf8)); // Decrypted plaintext
+const message = "Hello, secure world!";
+const pwd = "your-32-byte-key-here";
+
+var encrypted = sjcl.encrypt(pwd, message)
+var jsObject = JSON.parse(encrypted);
+console.log("Encrypted:", jsObject.ct);
+const decrypted = sjcl.decrypt(pwd, jsObject)
+console.log("Decrypted:", decrypted);
 
 function handleForm(event) {
 	event.preventDefault(); // Prevent default form submission
