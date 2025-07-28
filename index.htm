@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Private GitHub repository for archival purposes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Private Repository Archive</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #f5f5f5;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            font-size: 1.5em;
+        }
+        p {
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+<form id="myForm" onsubmit="handleForm(event)">
+  <input type="text" name="username" placeholder="Username">
+  <input type="password" name="password" placeholder="Password">
+  <button type="submit">Submit</button>
+</form>
+
+    <h1>Private Repository Archive</h1>
+    <p>This repository is for long-term storage and is not intended for public viewing.</p>
+    <p>created: July 28, 2025</p>
+
+
+
+<div id="result"></div>
+
+<!--script src="github_issues_list.js"></script-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script>
+
+/*
+const message = "Hello, secure world!";
+const key = CryptoJS.enc.Utf8.parse("your-32-byte-key-here"); // 32 bytes for AES-256
+const iv = CryptoJS.enc.Utf8.parse("test"); // 16 bytes for IV
+
+// Encrypt
+const encrypted = CryptoJS.AES.encrypt(message, key, { iv: iv }).toString();
+console.log("Encrypted:", encrypted);
+
+// Decrypt
+const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }).toString(CryptoJS.enc.Utf8);
+console.log("Decrypted:", decrypted);
+*/
+
+let key = CryptoJS.enc.Utf8.parse('Secret Passphrase'); // Ensure a strong, randomly generated key in production
+let iv = CryptoJS.lib.WordArray.random(128/8); // Generate a random initialization vector
+let encrypted = CryptoJS.AES.encrypt("This is the message", key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+let decrypted = CryptoJS.AES.decrypt(encrypted.ciphertext, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+console.log(encrypted.toString()); // Encrypted ciphertext
+console.log(decrypted.toString(CryptoJS.enc.Utf8)); // Decrypted plaintext
+
+function handleForm(event) {
+	event.preventDefault(); // Prevent default form submission
+	const form = event.target;
+	const formData = new FormData(form);
+	const data = Object.fromEntries(formData);
+	document.getElementById('result').innerText = `Received: ${data.name}, ${data.email}`;
+	// Process data client-side (e.g., display, store in localStorage)
+}
+</script>
+</script>
+
+
+</body>
+</html>
+
