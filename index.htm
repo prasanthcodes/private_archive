@@ -1,47 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Private GitHub repository for archival purposes.">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Private Repository Archive</title>
-    <style>
-        body {
-            font-family: monospace;
-            background-color: #f5f5f5;
-            color: #333;
-            text-align: center;
-            padding: 50px;
-        }
-        h1 {
-            font-size: 1.5em;
-        }
-        p {
-            font-size: 1em;
-        }
-    </style>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Private Web Portal.">
+<meta name="robots" content="noindex, nofollow">
+
+<title>Private Web Portal</title>
+<style>
+
+body {
+  font-family: calibri,helvetica,sans-serif;
+  font-size: 100%;
+  background-color: white/*palegreen*/;
+  padding: 5px;
+  color: #333;
+}
+
+
+table {
+  font-family: arial, sans-serif;
+  width: 100%;
+  text-align: left;
+}
+table, td, th {
+  border: 1px solid #aaaaaa;
+  border-collapse: collapse;
+}
+
+</style>
 </head>
 <body>
+<div id="top_0">
 <form id="myForm" onsubmit="handleForm(event)">
-  <input type="text" name="username" placeholder="Username">
-  <input type="password" name="password" placeholder="Password">
-  <button type="submit">Submit</button>
+  <label style="font-size:1.1em"><b>Private Web Portal </b></label>
+  <input type="text" name="username" id="username" maxlength="32" placeholder="Username">
+  <input type="password" name="password" id="password" maxlength="32" placeholder="Password">
+  <button type="submit">Login</button>
 </form>
+<br>
+</div>
 
-    <h1>Private Repository Archive</h1>
-    <p>This repository is for long-term storage and is not intended for public viewing.</p>
-    <p>created: July 28, 2025</p>
+<div id="div_home" style="display: block;">
+<div id="topgroup_1">
+<button type="button" class="buttongroup_1" id="createfo_a">CreateFolder</button>
+<button type="button" class="buttongroup_1" id="createfi_a">CreateFile</button>
+<input type="file" name="fileupload1[]" id="fileuploadid1" multiple="">
+<button type="button" class="buttongroup_1" id="uploadf_a">UploadFile</button>
+<button type="button" class="buttongroup_1" id="move_a">Move</button>
+<button type="button" class="buttongroup_1" id="copy_a">Copy</button>
+<button type="button" class="buttongroup_1" id="paste_a">Paste</button>
+<button type="button" class="buttongroup_1" id="delete_a">Delete</button>
+<button type="button" class="buttongroup_1" id="logout_a">Logout</button>
+<br>
+</div>
+<div id="topgroup_2">
+<span id="span_currentpage">CurrentPage: PublicPage</span>
+<button type="button" id="publicpage_a">PublicPage</button>
+<button type="button" id="privatepage_a">PrivatePage</button>
+<button type="button" id="statuspage_a">StatusPage</button>
+LastStatus: <span id="span_status"></span>
+<br>
+<br>
+</div>
+<div id="topgroup_3">
+<button type="button" id="back_a">Back</button>
+<button type="button" id="home_a">Home</button>
+CurrentPath: <span id="curpath_status">txtdata</span>
+<br>
+</div>
+<div id="viewcontent1"><table class="table1"><tbody><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all"></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr><tr><td>1</td><td><input type="checkbox" id="0" name="list_c"></td><td><span id="a0_0" class="act0"><u>temp1</u></span></td><td></td><td>2025-07-03 07:31:11</td><td></td><td></td><td><span id="a3_10" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>12</td><td><input type="checkbox" id="11" name="list_c"></td><td><span id="a0_11" class="act0"><u>texts_1</u></span></td><td></td><td>2025-06-14 06:05:35</td><td></td><td></td><td><span id="a3_11" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>13</td><td><input type="checkbox" id="12" name="list_c"></td><td><span id="b0_0" class="act0_1"><u>fullzip_20241230-014146.zip</u></span></td><td>74.34 MiB</td><td>2024-12-30 01:42:11</td><td><span id="b1_0" class="act1"><u>view</u></span></td><td><span id="b2_0" class="act2"><u>edit</u></span></td><td><span id="b3_0" class="act3"><u>rename</u></span></td><td><span id="b4_0" class="act4"><u>download</u></span></td></tr><tr><td>14</td><td><input type="checkbox" id="13" name="list_c"></td><td><span id="b0_1" class="act0_1"><u>newsites.txt</u></span></td><td>581 Bytes</td><td>2025-01-25 10:38:05</td><td><span id="b1_1" class="act1"><u>view</u></span></td><td><span id="b2_1" class="act2"><u>edit</u></span></td><td><span id="b3_1" class="act3"><u>rename</u></span></td><td><span id="b4_1" class="act4"><u>download</u></span></td></tr></tbody></table><br></div>
+
+</div>
 
 
 
 <div id="result"></div>
 
 <!--script src="github_issues_list.js"></script-->
+<script src="github_repo_contents_2.js"></script>
+
 <!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script-->
 <script src="http://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
 
 <script>
+
+
+
+
 
 /*
 const message = "Hello, secure world!";
@@ -57,13 +104,27 @@ const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }).toString(Cryp
 console.log("Decrypted:", decrypted);
 */
 
+//const message = "Hello, secure world!";
+const message = `/*
 const message = "Hello, secure world!";
-const pwd = "your-32-byte-key-here";
+const key = CryptoJS.enc.Utf8.parse("your-32-byte-key-here"); // 32 bytes for AES-256
+const iv = CryptoJS.enc.Utf8.parse("test"); // 16 bytes for IV
+
+// Encrypt
+const encrypted = CryptoJS.AES.encrypt(message, key, { iv: iv }).toString();
+console.log("Encrypted:", encrypted);
+
+// Decrypt
+const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }).toString(CryptoJS.enc.Utf8);
+console.log("Decrypted:", decrypted);
+*/`;
+
+const pwd = "1234567890";
 
 var encrypted = sjcl.encrypt(pwd, message)
 var jsObject = JSON.parse(encrypted);
-console.log("Encrypted:", jsObject.ct);
-const decrypted = sjcl.decrypt(pwd, jsObject)
+console.log("Encrypted:", jsObject);
+const decrypted = sjcl.decrypt(pwd, encrypted)
 console.log("Decrypted:", decrypted);
 
 function handleForm(event) {
