@@ -37,7 +37,7 @@ table, td, th {
   <label style="font-size:1.1em"><b>Private Web Portal </b></label>
   <input type="text" name="username" id="username" maxlength="32" placeholder="Username">
   <input type="password" name="password" id="password" maxlength="32" placeholder="Password">
-  <button type="submit">Login</button>
+  <button type="submit" id="submit_btn">Login</button>
 </form>
 <br>
 </div>
@@ -87,40 +87,77 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 <script>
 
 
+var did_loggedin=false;
+
+var stored_sha256={'1':{'1':'2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc420cb2e0','2':'f7b2205140f1dd73ed8a73950c94edb7bf2a0e34afec969b6a9533df0b490492'}};
+
+async function digestMessage(message) {
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-512', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
+}
+
+async function digestMessage_sha256(message) {
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
+}
+
+async function call_submit(){
+var username0 = document.getElementById("username1").value;
+var password0 = document.getElementById("password1").value;
+if (username0==""){
+alert('username must not be empty.');
+}
+else if (username0.match(/[^-_.\w]/)){
+alert('invalid username: username must contain letters,numbers,_-. characters.');
+} else if (await digestMessage_sha256(username0)!=stored_sha256['1']['1']){
+alert('username wrong.');
+} else {
+username1 = await digestMessage(username0);
+
+if (password0==""){
+alert('wrong password.');
+} else if (await digestMessage_sha256(password0)!=stored_sha256['1']['2']){
+alert('wrong password.');
+} else {
+password1 = await digestMessage(password0);
+did_loggedin=true;
+document.getElementById('div_login').style.display = 'none';
+document.getElementById('div_home').style.display = 'block';
+
+get_filespage(folderroot);
+changepage1();
+
+}
+
+}
+
+}
+
+document.getElementById("submit_btn").addEventListener("click", call_submit);
 
 
 
-/*
-const message = "Hello, secure world!";
-const key = CryptoJS.enc.Utf8.parse("your-32-byte-key-here"); // 32 bytes for AES-256
-const iv = CryptoJS.enc.Utf8.parse("test"); // 16 bytes for IV
+function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return '0 Bytes'
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
 
-// Encrypt
-const encrypted = CryptoJS.AES.encrypt(message, key, { iv: iv }).toString();
-console.log("Encrypted:", encrypted);
-
-// Decrypt
-const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }).toString(CryptoJS.enc.Utf8);
-console.log("Decrypted:", decrypted);
-*/
 
 //const message = "Hello, secure world!";
-const message = `/*
-const message = "Hello, secure world!";
-const key = CryptoJS.enc.Utf8.parse("your-32-byte-key-here"); // 32 bytes for AES-256
-const iv = CryptoJS.enc.Utf8.parse("test"); // 16 bytes for IV
-
-// Encrypt
-const encrypted = CryptoJS.AES.encrypt(message, key, { iv: iv }).toString();
-console.log("Encrypted:", encrypted);
-
-// Decrypt
-const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv }).toString(CryptoJS.enc.Utf8);
-console.log("Decrypted:", decrypted);
-*/`;
+const message = `"Hello, secure world!"`;
 
 const pwd = "1234567890";
-
+//const bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 var encrypted = sjcl.encrypt(pwd, message)
 var jsObject = JSON.parse(encrypted);
 console.log("Encrypted:", jsObject);
