@@ -79,7 +79,9 @@ LastStatus: <span id="span_status"></span>
 CurrentPath: <span id="curpath_status">txtdata</span>
 <br>
 </div>
-<div id="viewcontent1"><table class="table1"><tbody><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all"></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr><tr><td>1</td><td><input type="checkbox" id="0" name="list_c"></td><td><span id="a0_0" class="act0"><u>temp1</u></span></td><td></td><td>2025-07-03 07:31:11</td><td></td><td></td><td><span id="a3_10" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>12</td><td><input type="checkbox" id="11" name="list_c"></td><td><span id="a0_11" class="act0"><u>texts_1</u></span></td><td></td><td>2025-06-14 06:05:35</td><td></td><td></td><td><span id="a3_11" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>13</td><td><input type="checkbox" id="12" name="list_c"></td><td><span id="b0_0" class="act0_1"><u>fullzip_20241230-014146.zip</u></span></td><td>74.34 MiB</td><td>2024-12-30 01:42:11</td><td><span id="b1_0" class="act1"><u>view</u></span></td><td><span id="b2_0" class="act2"><u>edit</u></span></td><td><span id="b3_0" class="act3"><u>rename</u></span></td><td><span id="b4_0" class="act4"><u>download</u></span></td></tr><tr><td>14</td><td><input type="checkbox" id="13" name="list_c"></td><td><span id="b0_1" class="act0_1"><u>newsites.txt</u></span></td><td>581 Bytes</td><td>2025-01-25 10:38:05</td><td><span id="b1_1" class="act1"><u>view</u></span></td><td><span id="b2_1" class="act2"><u>edit</u></span></td><td><span id="b3_1" class="act3"><u>rename</u></span></td><td><span id="b4_1" class="act4"><u>download</u></span></td></tr></tbody></table><br></div>
+<div id="viewcontent1">
+<table class="table1"><tbody><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all"></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr><tr><td>1</td><td><input type="checkbox" id="0" name="list_c"></td><td><span id="a0_0" class="act0"><u>temp1</u></span></td><td></td><td>2025-07-03 07:31:11</td><td></td><td></td><td><span id="a3_10" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>12</td><td><input type="checkbox" id="11" name="list_c"></td><td><span id="a0_11" class="act0"><u>texts_1</u></span></td><td></td><td>2025-06-14 06:05:35</td><td></td><td></td><td><span id="a3_11" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>13</td><td><input type="checkbox" id="12" name="list_c"></td><td><span id="b0_0" class="act0_1"><u>fullzip_20241230-014146.zip</u></span></td><td>74.34 MiB</td><td>2024-12-30 01:42:11</td><td><span id="b1_0" class="act1"><u>view</u></span></td><td><span id="b2_0" class="act2"><u>edit</u></span></td><td><span id="b3_0" class="act3"><u>rename</u></span></td><td><span id="b4_0" class="act4"><u>download</u></span></td></tr><tr><td>14</td><td><input type="checkbox" id="13" name="list_c"></td><td><span id="b0_1" class="act0_1"><u>newsites.txt</u></span></td><td>581 Bytes</td><td>2025-01-25 10:38:05</td><td><span id="b1_1" class="act1"><u>view</u></span></td><td><span id="b2_1" class="act2"><u>edit</u></span></td><td><span id="b3_1" class="act3"><u>rename</u></span></td><td><span id="b4_1" class="act4"><u>download</u></span></td></tr></tbody></table><br>
+</div>
 
 </div>
 
@@ -587,144 +589,43 @@ await changepage1();
 
 async function open_function_1(path){
 
-jdata = await listRepoContents(owner, repo, 'docs', token);
-console.log(jdata)
-	
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-content={'operation': 'listdir','folderroot':folderroot};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(async function(ContentRetrieved){ 
-if (ContentRetrieved['status']=='ok'){
-
-jdata=ContentRetrieved['data'];
-
-if (!CryptMode_flag){
+jdata = await listRepoContents(owner, repo, path, token);
+//console.log(jdata)
 
 filespage_html='<table class=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
-for (let i=0;i<jdata[1].length;i++) {
-	let name=jdata[1][i];
-	let size='';
-	let mdate=jdata[4][i];
+for (let i=0;i<jdata.length;i++) {
+	N_folders=1
+	if (jdata[i][1]=='folder'){
+	let name=jdata[i][0].split('\\').pop().split('/').pop();
+	let size=formatBytes(jdata[i][2]);
+	let mdate=jdata[i][3];
 	filespage_html+='<tr><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
 	+'<td><span id=\'a0_'+i+'\' class=\'act0\'><u>'+name+'</span></td><td></td><td>'+mdate+'</td>'
 	+'<td></td><td></td><td><span id=\"a3_'+i+'\" class=\'act3\'><u>rename</u></span></td>'
 	+'<td></td></tr>';
+	}
 }
-let N_folders=jdata[1].length;
-for (let i=0;i<jdata[2].length;i++) {
-	let name=jdata[2][i];
-	let size=formatBytes(jdata[3][i]);
-	let mdate=jdata[5][i];
+for (let i=0;i<jdata.length;i++) {
+	N_folders=1
+	if (jdata[i][1]=='file'){
+	let name=jdata[i][0].split('\\').pop().split('/').pop();
+	let size=formatBytes(jdata[i][2]);
+	let mdate=jdata[i][3];
 	filespage_html+='<tr><td>'+(N_folders+i+1)+'</td><td><input type="checkbox" id="'+(N_folders+i)+'" name="list_c" ></td>'
 	+'<td><span id=\'b0_'+i+'\' class=\'act0_1\' ><u>'+name+'</u></span></td><td>'+size+'</td><td>'+mdate+'</td>'
 	+'<td><span id=\'b1_'+i+'\' class=\'act1\'><u>view</u></span></td>'
 	+'<td><span id=\'b2_'+i+'\' class=\'act2\'><u>edit</u></span></td>'
 	+'<td><span id=\'b3_'+i+'\' class=\'act3\'><u>rename</u></span></td>'
 	+'<td><span id=\'b4_'+i+'\' class=\'act4\'><u>download</u></span></td></tr>';
+	}
 }
 filespage_html+='</table><br>';
 
-} else {
-cryptpage_html='';
-let pwout2= await get_CMode_password();
-if (pwout2[0]){
-let key=pwout2[1];
-var key_clone1=get_keyclone(key);
+path_status.innerHTML=path;
 
-//---to display folders----
-cryptpage_html='<input type="checkbox" id="selectall" name="select_all" ><label for="selectall"> SelectAll</label><br>'+
-'<table class=\"table_im\"><tr>';
-if(phonesite_flag){inter_str='</td><td>';} else {inter_str='<br>';}
-Lcount=0;
-for (let i=0;i<jdata[1].length;i++) {
-	let name=jdata[1][i];
-	let mdate=jdata[4][i];
-	cryptpage_html+=
-	'<td><div class="c_unit" id="cu_'+i+'" ><span id="a0_'+i+'" class="act0"><img loading="lazy" class="folder_img" alt="<image>" src=""></span>'
-	+inter_str
-	+'<input type="checkbox" id="'+i+'" name="list_c" ><label for="'+i+'"> Select</label><br>'
-	+'<b>Name:</b><span class="foldername"  >'+name+'</span><br>'
-	+'<b>ModifiedDate: </b>'+mdate+'<br>'
-	+'<span id=\"a3_'+i+'\" class=\'act3\'><u>Rename</u></span><br>'
-	+'</div></td>';
-	Lcount+=1;
-	if(phonesite_flag){
-	cryptpage_html+='</tr><tr>';
-	} else{
-	if ((Lcount)%6==0){cryptpage_html+='</tr><tr>';}
-	}
-}
-
-if(!phonesite_flag){
-if (Lcount<6){cryptpage_html+='<td>&nbsp;</td>'.repeat(6-Lcount);}
-}
-cryptpage_html+='</tr></table><br>';
-//---to display files----
-cryptpage_html+='<table class=\"table_im\"><tr>';
-let N_folders=jdata[1].length;
-if(phonesite_flag){inter_str='</td><td>';} else {inter_str='<br>';}
-Lcount=0;
-for (let i=0;i<jdata[2].length;i++) {
-	let s_id=N_folders+i;
-	let name=jdata[2][i];
-	let file_class='';
-	let last_7=name.slice(-7,).toLowerCase();
-	if(['_im.raw','_no.raw'].includes(last_7)){
-	let realname=await encbase64name2filename(name,key);
-	let ext=realname.split('.').slice(-1)[0].toLowerCase();
-	let srcstr='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-	if (last_7=='_im.raw'){
-	let ico_name=name.slice(0,-7)+'_ic.raw';
-	if (jdata[2].includes(ico_name)){
-		let idx=jdata[2].indexOf(ico_name);
-		let folderroot_cp=folderroot.slice();
-		folderroot_cp.push(idx);
-		[srcstr,ext2]=await getdownload_icon(folderroot_cp,key);
-	}
-	}
-	if(image_extensions.includes(ext)){file_class='image_file';} else {file_class='noimg_file';}
-	let size=formatBytes(jdata[3][i]);
-	let mdate=jdata[5][i];
-	cryptpage_html+=
-	'<td><div class="c_unit" id="cu_'+s_id+'" ><span id="b0_'+i+'" class="act0_1">'+
-	'<img loading="lazy" class="file_img '+file_class+'" alt="<image>" src="'+srcstr+'"></span>'
-	+inter_str
-	+'<input type="checkbox" id="'+s_id+'" name="list_c" ><label for="'+s_id+'"> Select</label><br>'
-	+'<b>Name: </b><span id="c0_'+i+'" class="filename" >'+realname+'</span><br>'
-	+'<b>OrigName: </b><span id="c1_'+i+'">'+name+'</span><br>'
-	+'<b>Size: </b>'+size+'<br>'
-	+'<b>ModifiedDate: </b>'+mdate+'<br>'
-	+'<span id=\"b2_'+i+'\" class=\'act2_2\'><u>Edit</u></span><br>'
-	+'<span id=\"b3_'+i+'\" class=\'act3\'><u>Rename</u></span><br>'
-	+'<span id=\"b4_'+i+'\" class=\'act4\'><u>Download</u></span><br>'
-	+'</div></td>';
-	Lcount+=1;
-	if(phonesite_flag){
-	cryptpage_html+='</tr><tr>';
-	} else{
-	if ((Lcount)%6==0){cryptpage_html+='</tr><tr>';}
-	}
-}
-}
-if(!phonesite_flag){
-if (Lcount<6){cryptpage_html+='<td>&nbsp;</td>'.repeat(6-Lcount);}
-}
-cryptpage_html+='</tr></table><br>';
-} else {span_status.innerHTML='CMode not on, due to password issues.';}
-
-}
-path_status.innerHTML=jdata[0];
-}
-
-statuspage_html+=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr']+'<br>'; 
+statuspage_html+=Date().toString().substr(0,24)+' page loaded. path: '+path+'<br>'; 
 await changepage1();
-	});
+
 }
 
 async function changepage1(){
@@ -734,10 +635,6 @@ if (!CryptMode_flag){
 viewcontent1.innerHTML=filespage_html;
 span_currentpage.innerHTML='CurrentPage: FilesPage';
 
-var elements = document.getElementsByClassName('act0_1');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', view_function, false);
-}
 
 } else {
 document.body.style.backgroundColor = "#fec";
@@ -1478,13 +1375,14 @@ async function listRepoContents(owner, repo, path = '', token = '') {
 	jdata=[];
     
     // Process each item in the repository
+	let lastModified = '';
     for (const item of contents) {
       if (item.type === 'file') {
         // Fetch the last commit for the file to get the modified date
         const commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(item.path)}&per_page=1`;
         const commitResponse = await fetch(commitUrl, { 
 		});
-        let lastModified = '';
+        //let lastModified = '';
         //console.log(`File: ${item.path}, Size: ${item.size} bytes, Last Modified: ${lastModified}`);
 		//console.log(`File: ${item.path}, Size: ${item.size} bytes`);
 		jdata.push([item.path,'file',item.size,lastModified])
@@ -1508,7 +1406,9 @@ const token = ''; // Replace with your GitHub personal access token if accessing
 
 window.onload = async () => {
   try {
-	open_function_1('docs')
+	await open_function_1('');
+	//await changepage1();
+
   } catch (error) {
     console.error('Error:', error);
   }
