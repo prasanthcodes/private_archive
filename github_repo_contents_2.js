@@ -33,15 +33,18 @@ async function listRepoContents(owner, repo, path = '', token = '') {
         const commitResponse = await fetch(commitUrl, { headers });
         let lastModified = 'Unknown';
         
+		/*
         if (commitResponse.ok) {
           const commits = await commitResponse.json();
           if (commits.length > 0) {
             lastModified = new Date(commits[0].commit.committer.date).toLocaleString();
           }
         }
+		*/
         
         // Log file details: path, size (in bytes), and last modified date
-        console.log(`File: ${item.path}, Size: ${item.size} bytes, Last Modified: ${lastModified}`);
+        //console.log(`File: ${item.path}, Size: ${item.size} bytes, Last Modified: ${lastModified}`);
+		console.log(`File: ${item.path}, Size: ${item.size} bytes`);
       } else if (item.type === 'dir') {
         console.log(`Folder: ${item.path}`);
         // Recursively fetch contents of subdirectories
