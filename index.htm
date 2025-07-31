@@ -104,7 +104,7 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 <!--script src="github_issues_list.js"></script-->
 
 <!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script-->
-<script src="//bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
+<script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
 
 <script>
 //var folder_icon='open-folder.png';
@@ -999,7 +999,8 @@ let datestr=Date().toString().substr(0,24);
 span_status.innerHTML=datestr+', file format not viewable.';
 } else {
 
-fetch(filepath)
+url_1='https://github.com/'+owner+'/'+repo+'/blob/master/'+filepath
+fetch(url_1)
 .then(response=>response.text())
 .then(response => {
 	if (!response.ok) {
