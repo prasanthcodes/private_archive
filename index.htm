@@ -467,7 +467,9 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 
 async function All_operations(filepath,filetype,rowId,columnIndex,identifier){
 
-if ((All_operations==3)&(filetype=='file')){
+console.log(columnIndex)
+if ((columnIndex==2)&(filetype=='file')){
+console.log(filepath)
 await view_function(filepath);
 
 }
@@ -902,6 +904,7 @@ table.addEventListener('click', async (event) => {
 		output.textContent = JSON.stringify({ rowId, columnIndex, cellContent }, null, 2);
 		filepath = row.getAttribute('data-path');
 		filetype = row.getAttribute('data-type');
+		console.log('filepath',filepath)
 		await All_operations(filepath, filetype, rowId,  columnIndex,'')
 	}
 });
@@ -988,7 +991,7 @@ await get_filespage(folderroot);
 }
 
 function view_function(filepath){
-let text_extensions=['txt','csv','htm','html','css','js'];
+let text_extensions=['txt','csv','htm','html','css','js','yml','md','toml','ini'];
 let filename=filepath.split('\\').pop().split('/').pop();;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(image_extensions.includes(ext) || text_extensions.includes(ext))){
@@ -1005,7 +1008,7 @@ fetch(filepath)
 	} else {
         var mimeType = response.headers.get('Content-Type');
 		console.log(mimeType)
-        var filedata = await response.text();
+        var filedata = response.text();
 		let statusnow=Date().toString().substr(0,24)+' file retrieved.';
 		span_status.innerHTML=statusnow;
 		statuspage_html+=statusnow+'<br>';
