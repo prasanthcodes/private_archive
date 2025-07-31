@@ -38,6 +38,16 @@ width: 100%;
 width: 16%;
 }
 
+td:nth-child(6) {cursor: pointer;color: blue;}
+td:nth-child(7) {cursor: pointer;color: blue;}
+td:nth-child(8) {cursor: pointer;color: blue;}
+td:nth-child(9) {cursor: pointer;color: blue;}
+
+td:nth-child(3):active {color: red;}
+td:nth-child(6):active {color: red;}
+td:nth-child(7):active {color: red;}
+td:nth-child(8):active {color: red;}
+td:nth-child(9):active {color: red;}
 </style>
 </head>
 <body>
@@ -80,7 +90,7 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 <br>
 </div>
 <div id="viewcontent1">
-<table class="table1"><tbody><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all"></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr><tr><td>1</td><td><input type="checkbox" id="0" name="list_c"></td><td><span id="a0_0" class="act0"><u>temp1</u></span></td><td></td><td>2025-07-03 07:31:11</td><td></td><td></td><td><span id="a3_10" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>12</td><td><input type="checkbox" id="11" name="list_c"></td><td><span id="a0_11" class="act0"><u>texts_1</u></span></td><td></td><td>2025-06-14 06:05:35</td><td></td><td></td><td><span id="a3_11" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>13</td><td><input type="checkbox" id="12" name="list_c"></td><td><span id="b0_0" class="act0_1"><u>fullzip_20241230-014146.zip</u></span></td><td>74.34 MiB</td><td>2024-12-30 01:42:11</td><td><span id="b1_0" class="act1"><u>view</u></span></td><td><span id="b2_0" class="act2"><u>edit</u></span></td><td><span id="b3_0" class="act3"><u>rename</u></span></td><td><span id="b4_0" class="act4"><u>download</u></span></td></tr><tr><td>14</td><td><input type="checkbox" id="13" name="list_c"></td><td><span id="b0_1" class="act0_1"><u>newsites.txt</u></span></td><td>581 Bytes</td><td>2025-01-25 10:38:05</td><td><span id="b1_1" class="act1"><u>view</u></span></td><td><span id="b2_1" class="act2"><u>edit</u></span></td><td><span id="b3_1" class="act3"><u>rename</u></span></td><td><span id="b4_1" class="act4"><u>download</u></span></td></tr></tbody></table><br>
+<table id="table1"><tbody><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all"></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr><tr><td>1</td><td><input type="checkbox" id="0" name="list_c"></td><td><span id="a0_0" class="act0"><u>temp1</u></span></td><td></td><td>2025-07-03 07:31:11</td><td></td><td></td><td><span id="a3_10" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>12</td><td><input type="checkbox" id="11" name="list_c"></td><td><span id="a0_11" class="act0"><u>texts_1</u></span></td><td></td><td>2025-06-14 06:05:35</td><td></td><td></td><td><span id="a3_11" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>13</td><td><input type="checkbox" id="12" name="list_c"></td><td><span id="b0_0" class="act0_1"><u>fullzip_20241230-014146.zip</u></span></td><td>74.34 MiB</td><td>2024-12-30 01:42:11</td><td><span id="b1_0" class="act1"><u>view</u></span></td><td><span id="b2_0" class="act2"><u>edit</u></span></td><td><span id="b3_0" class="act3"><u>rename</u></span></td><td><span id="b4_0" class="act4"><u>download</u></span></td></tr><tr><td>14</td><td><input type="checkbox" id="13" name="list_c"></td><td><span id="b0_1" class="act0_1"><u>newsites.txt</u></span></td><td>581 Bytes</td><td>2025-01-25 10:38:05</td><td><span id="b1_1" class="act1"><u>view</u></span></td><td><span id="b2_1" class="act2"><u>edit</u></span></td><td><span id="b3_1" class="act3"><u>rename</u></span></td><td><span id="b4_1" class="act4"><u>download</u></span></td></tr></tbody></table><br>
 </div>
 
 </div>
@@ -88,6 +98,8 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 
 
 <div id="result"></div>
+<div id="output">Click a cell to see the row ID, column, and cell content</div>
+
 
 <!--script src="github_issues_list.js"></script-->
 
@@ -171,6 +183,10 @@ var viewcontent1=document.getElementById('viewcontent1');
 var span_currentpage = document.getElementById('span_currentpage');
 var span_status = document.getElementById('span_status');
 var path_status = document.getElementById('curpath_status');
+var gr1 = document.getElementById('topgroup_1');
+gr1.style.display ='none'
+
+
 var filespage_html='';
 var statuspage_html='';
 var cryptpage_html='';
@@ -182,8 +198,9 @@ var move_or_copy=0;
 var foldersrc=[];
 var image_extensions=['jpg','jpeg','png','gif','bmp','webp','svg'];
 var filename2_last='';
-let jdata='';
-
+var jdata='';
+var filepath=''
+var filetype=''
 
 
 document.getElementById('publicpage_a').addEventListener('click', changepage1, false);
@@ -448,6 +465,230 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 }
 }
 
+async function All_operations(filepath,filetype,rowId,columnIndex,identifier){
+
+if ((All_operations==3)&(filetype=='file')){
+await view_function(filepath);
+
+}
+
+
+var formdata1 = new FormData();
+formdata1.append('username1', username1);
+formdata1.append('password1', password1);
+formdata1.append('id', lgid);
+
+if (this.id=='createfo_p'){
+//content={'operation': 'createfolder','folderroot':[0,1],'selected': [0,2,3,4],'name_in':name_in,'folderdestination':[0,1],'content':'text data'};
+let name_in = prompt("enter folder name:", "new");
+content={'operation': 'createfolder','folderroot':folderroot,'name_in':name_in};
+data=JSON.stringify(content);
+formdata1.append('data', data);
+fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
+.then(response=>response.json())
+.then(ContentRetrieved=>{
+	let datestr=Date().toString().substr(0,24);
+	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+	get_filespage(folderroot);
+	});
+
+} else if (this.id=='createfi_p'){
+let name_in = prompt("enter file name:", "new.txt");
+content={'operation': 'createfile','folderroot':folderroot,'name_in':name_in};
+data=JSON.stringify(content);
+formdata1.append('data', data);
+fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
+.then(response=>response.json())
+.then(ContentRetrieved=>{ 
+	let datestr=Date().toString().substr(0,24);
+	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+	get_filespage(folderroot);
+	});
+
+} else if (this.id=='uploadf_b'){
+var uploadbrowse=document.getElementById('fileuploadid1');
+let pwout=get_spassword();
+if (pwout[0]){
+if(uploadbrowse.files.length>0){
+content={'operation': 'upload','folderroot':folderroot,'name_in':'new.txt'};
+data=JSON.stringify(content);
+formdata1.append('data', data);
+formdata1.append('spassword', pwout[1]);
+// Append files to files array
+for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
+  let file = uploadbrowse.files[fno];
+  let filename2=file.name;
+  let ext=filename2.split('.').pop().toLowerCase();
+// crypt mode
+if (CryptMode_flag){
+let pwout2=await get_CMode_password();
+if (pwout2[0]){
+let key=pwout2[1];
+var key_clone1=get_keyclone(key);
+//---prepare crypt file-----
+let filename2_b64=await filename2encbase64name(filename2,key);
+let data2sav=await run_all_op(filename2,file,ext,key_clone1);
+var file_2 = new File([data2sav], filename2_b64,{type: 'application/octet-stream'});
+formdata1.append('files[]', file_2);
+//---prepare crypt image icon file-----
+if (image_extensions.includes(ext)){
+var outname=filename2_b64.slice(0,-6)+'ic.raw';
+var file_jpg_comp=await compress_imgfile_1(file,outname);
+let data2sav2=await run_all_op(filename2,file_jpg_comp,'jpg',key_clone1);
+var file_3 = new File([data2sav2], outname,{type: 'application/octet-stream'});
+formdata1.append('files[]', file_3);
+}
+
+} else {span_status.innerHTML='cmode password incorrect';}
+} else {
+  formdata1.append('files[]', file);
+}
+}
+
+fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
+.then(response=>response.json())
+.then(ContentRetrieved=>{ 
+	let datestr=Date().toString().substr(0,24);
+	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
+	if (ContentRetrieved['statusstr'][0]=='['){
+	let aray1=ContentRetrieved['statusstr'].split(',');
+	statusnow=datestr+' '+aray1[0].substring(1);
+	}
+	span_status.innerHTML=statusnow;
+	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
+	get_filespage(folderroot);
+	});
+} else {span_status.innerHTML='no files to upload';}
+}
+
+} else if (this.id=='delete_b'){
+getselectedfiles();
+if (selected_files.length<1){
+span_status.innerHTML='no files selected.';
+} else {
+if(CryptMode_flag){
+selected_files=get_ico_indices(selected_files);
+}
+
+let pwout=get_spassword();
+if (pwout[0]){
+content={'operation': 'delete','folderroot':folderroot,'selected':selected_files};
+data=JSON.stringify(content);
+formdata1.append('data', data);
+formdata1.append('spassword', pwout[1]);
+fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
+.then(response=>response.json())
+.then(ContentRetrieved=>{
+	let datestr=Date().toString().substr(0,24);
+	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
+	if (ContentRetrieved['statusstr'][0]=='['){
+	let aray1=ContentRetrieved['statusstr'].split(',');
+	statusnow=datestr+' '+aray1[0].substring(1);
+	}
+	span_status.innerHTML=statusnow;
+	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
+	get_filespage(folderroot);
+	});
+}
+}
+
+} else if (this.id=='move_b'){
+span_status.innerHTML='move operation not working.';
+/*
+getselectedfiles();
+selected_files_mvcp=selected_files.slice();
+if (selected_files_mvcp.length<1){
+span_status.innerHTML='no files selected.';
+} else {
+move_or_copy=1;
+foldersrc=folderroot.slice();
+if(CryptMode_flag){
+selected_files_mvcp=get_ico_indices(selected_files_mvcp);
+}
+span_status.innerHTML=selected_files_mvcp.length+' items ready to move. select destination directory and click paste button.';
+}
+*/
+} else if (this.id=='copy_b'){
+getselectedfiles();
+selected_files_mvcp=selected_files.slice();
+if (selected_files_mvcp.length<1){
+span_status.innerHTML='no files selected.';
+} else {
+move_or_copy=2;
+foldersrc=folderroot.slice();
+if(CryptMode_flag){
+selected_files_mvcp=get_ico_indices(selected_files_mvcp);
+}
+span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select destination directory and click paste button.';
+}
+
+} else if (this.id=='paste_b'){
+if (selected_files_mvcp.length<1){
+span_status.innerHTML='no files selected.';
+} else {
+let pwout=get_spassword();
+if (pwout[0]){
+if (move_or_copy==1){
+content={'operation': 'move','folderroot':foldersrc,'folderdestination':folderroot,'selected':selected_files_mvcp};
+} else if (move_or_copy==2){
+content={'operation': 'copy','folderroot':foldersrc,'folderdestination':folderroot,'selected':selected_files_mvcp};
+}
+data=JSON.stringify(content);
+formdata1.append('data', data);
+formdata1.append('spassword', pwout[1]);
+fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
+.then(response=>response.json())
+.then(ContentRetrieved=>{
+	let datestr=Date().toString().substr(0,24);
+	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
+	if (ContentRetrieved['statusstr'][0]=='['){
+	let aray1=ContentRetrieved['statusstr'].split(',');
+	statusnow=datestr+' '+aray1[0].substring(1);
+	}
+	span_status.innerHTML=statusnow;
+	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
+	get_filespage(folderroot);
+	});
+}
+}
+
+} else if (this.id=='zip_b'){
+getselectedfiles();
+if (selected_files.length<1){
+span_status.innerHTML='no files selected.';
+} else {
+let pwout=get_spassword();
+if (pwout[0]){
+if(CryptMode_flag){
+selected_files=get_ico_indices(selected_files);
+}
+content={'operation': 'zip','folderroot':folderroot,'selected':selected_files};
+data=JSON.stringify(content);
+formdata1.append('data', data);
+formdata1.append('spassword', pwout[1]);
+fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
+.then(response=>response.json())
+.then(ContentRetrieved=>{
+	let datestr=Date().toString().substr(0,24);
+	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
+	if (ContentRetrieved['statusstr'][0]=='['){
+	let aray1=ContentRetrieved['statusstr'].split(',');
+	statusnow=datestr+' '+aray1[0].substring(1);
+	}
+	span_status.innerHTML=statusnow;
+	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
+	get_filespage(folderroot);
+	});
+}
+}
+}
+}
+
+
 async function get_filespage(folderroot){
 
 var formdata1 = new FormData();
@@ -466,7 +707,7 @@ jdata=ContentRetrieved['data'];
 
 if (!CryptMode_flag){
 
-filespage_html='<table class=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
+filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
 for (let i=0;i<jdata[1].length;i++) {
 	let name=jdata[1][i];
 	let size='';
@@ -591,41 +832,38 @@ async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
 //console.log(jdata)
-
-filespage_html='<table class=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
+filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
+N_folders=0;
 for (let i=0;i<jdata.length;i++) {
-	N_folders=1
 	if (jdata[i][1]=='folder'){
 	let name=jdata[i][0].split('\\').pop().split('/').pop();
 	let size=formatBytes(jdata[i][2]);
 	let mdate=jdata[i][3];
-	filespage_html+='<tr><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
-	+'<td><span id=\'a0_'+i+'\' class=\'act0\'><u>'+name+'</span></td><td></td><td>'+mdate+'</td>'
-	+'<td></td><td></td><td><span id=\"a3_'+i+'\" class=\'act3\'><u>rename</u></span></td>'
+	filespage_html+='<tr data-id="'+i+'" data-type="folder" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
+	+'<td>'+name+'</td><td></td><td>'+mdate+'</td>'
+	+'<td></td><td></td><td><u>rename</u></td>'
 	+'<td></td></tr>';
+	N_folders+=1;
 	}
 }
 for (let i=0;i<jdata.length;i++) {
-	N_folders=1
 	if (jdata[i][1]=='file'){
 	let name=jdata[i][0].split('\\').pop().split('/').pop();
 	let size=formatBytes(jdata[i][2]);
 	let mdate=jdata[i][3];
-	filespage_html+='<tr><td>'+(N_folders+i+1)+'</td><td><input type="checkbox" id="'+(N_folders+i)+'" name="list_c" ></td>'
-	+'<td><span id=\'b0_'+i+'\' class=\'act0_1\' ><u>'+name+'</u></span></td><td>'+size+'</td><td>'+mdate+'</td>'
-	+'<td><span id=\'b1_'+i+'\' class=\'act1\'><u>view</u></span></td>'
-	+'<td><span id=\'b2_'+i+'\' class=\'act2\'><u>edit</u></span></td>'
-	+'<td><span id=\'b3_'+i+'\' class=\'act3\'><u>rename</u></span></td>'
-	+'<td><span id=\'b4_'+i+'\' class=\'act4\'><u>download</u></span></td></tr>';
+	filespage_html+='<tr data-id="'+i+'" data-type="file" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
+	+'<td><u>'+name+'</u></td><td>'+size+'</td><td>'+mdate+'</td>'
+	+'<td><u>view</u></td>'
+	+'<td><u>edit</u></td>'
+	+'<td><u>rename</u></td>'
+	+'<td><u>download</u></td></tr>';
 	}
 }
 filespage_html+='</table><br>';
 
 path_status.innerHTML=path;
-
 statuspage_html+=Date().toString().substr(0,24)+' page loaded. path: '+path+'<br>'; 
 await changepage1();
-
 }
 
 async function changepage1(){
@@ -634,68 +872,9 @@ document.body.style.backgroundColor = "";
 if (!CryptMode_flag){
 viewcontent1.innerHTML=filespage_html;
 span_currentpage.innerHTML='CurrentPage: FilesPage';
-
-
-} else {
-document.body.style.backgroundColor = "#fec";
-
-let pwout2= await get_CMode_password();
-if (pwout2[0]){
-viewcontent1.innerHTML=cryptpage_html;
-span_currentpage.innerHTML='CurrentPage: CryptPage';
-
-var elements = document.getElementsByClassName('folder_img');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].src=folder_icon;
-}
-var elements = document.getElementsByClassName('image_file');
-for (var i = 0; i < elements.length; i++) {
-    if(elements[i].src=="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="){elements[i].src=img_icon;}
-}
-var elements = document.getElementsByClassName('noimg_file');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].src=file_icon;
-}
-
-var elements = document.getElementsByClassName('act0_1');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', view_function2, false);
-}
-
-var elements = document.getElementsByClassName('act2_2');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', edit_function2, false);
-}
-
-//document.getElementById('edit_submit').addEventListener('click', upload_function2, false);
-}
 }
 
 selected_files=[];
-var elements = document.getElementsByClassName('act0');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', open_function, false);
-}
-
-var elements = document.getElementsByClassName('act1');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', view_function, false);
-}
-
-var elements = document.getElementsByClassName('act2');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', edit_function, false);
-}
-
-var elements = document.getElementsByClassName('act3');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', rename_function, false);
-}
-
-var elements = document.getElementsByClassName('act4');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', download_function, false);
-}
 
 try{
 let cbox1=document.getElementById('selectall');
@@ -709,6 +888,23 @@ for (var i = 0; i < checkboxes.length; i++) {
 } catch {
 console.log('cbox1 not present error.');
 }
+
+const table = document.getElementById('table1');
+const output = document.getElementById('output');
+table.addEventListener('click', async (event) => {
+	const cell = event.target.closest('td');
+	if (cell) {
+		const row = cell.closest('tr');
+		const rowId = row.getAttribute('data-id');
+		const columnIndex = Array.from(row.children).indexOf(cell);
+		//const column = headers[columnIndex];
+		const cellContent = cell.textContent;
+		output.textContent = JSON.stringify({ rowId, columnIndex, cellContent }, null, 2);
+		filepath = row.getAttribute('data-path');
+		filetype = row.getAttribute('data-type');
+		await All_operations(filepath, filetype, rowId,  columnIndex,'')
+	}
+});
 }
 
 function changepage2(){
@@ -791,65 +987,53 @@ await get_filespage(folderroot);
 }
 }
 
-function view_function(){
-let id=this.id;
-if(id[0]=='b'){
+function view_function(filepath){
 let text_extensions=['txt','csv','htm','html','css','js'];
-let id_name=id.substring(0, 1) + '0' + id.substring(2,);
-let filename=document.getElementById(id_name).innerText;
+let filename=filepath.split('\\').pop().split('/').pop();;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(image_extensions.includes(ext) || text_extensions.includes(ext))){
 let datestr=Date().toString().substr(0,24);
 span_status.innerHTML=datestr+', file format not viewable.';
 } else {
 
-folderroot.push(parseInt(id.substr(3,) , 10));
-content={'operation': 'view','folderroot':folderroot.slice()};
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let statusnow=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	if (ContentRetrieved['status']=='ok'){
-	let mime=ContentRetrieved['data'][1];
-	console.log(mime)
-	if (text_extensions.includes(ext)){
-	text_ct=ContentRetrieved['data'][2];
-	/*
-	if (ext=='htm' || ext=='html'){
-		text_ct=formatHTML(text_ct);
-	}
-	*/
-	text_ct=replaceAll(text_ct,'&','&amp;');
-	text_ct=replaceAll(text_ct,'<','&lt;');
-	text_ct=replaceAll(text_ct,'>','&gt;');
-	text_ct=replaceAll(text_ct,'"','&quot;');
-	text_ct=replaceAll(text_ct,'\'','&apos;');
-	//text_ct=text_ct.replace(/(?:\r\n|\r|\n)/g, '<br>');
-	//text_ct=text_ct.replace('<br>', '\r\n<br>');
-	text_ct='<button type="button" class="buttonhighlight_1" id="highlight_p" onclick="higlight_fn()" >CodeHighlight</button><pre><code>'+text_ct+'</code></pre>';
-	
-	filespage_html=text_ct;
-	}else if(image_extensions.includes(ext)){
-	filespage_html="<img src='data:"+mime+";base64,"+ContentRetrieved['data'][2]+"'>";
-	}else{
-	filespage_html='file not displayed.';
-	}
-	changepage1();
+fetch(filepath)
+.then(response=>response.text())
+.then(response => {
+	if (!response.ok) {
+		filespage_html='an error occured when retrieving';
+		changepage1();
 	} else {
-	filespage_html='file not retrieved.';
-	changepage1();
+        var mimeType = response.headers.get('Content-Type');
+		console.log(mimeType)
+        var filedata = await response.text();
+		let statusnow=Date().toString().substr(0,24)+' file retrieved.';
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
+		if (text_extensions.includes(ext)){
+		text_ct=ContentRetrieved['data'][2];
+		/*
+		if (ext=='htm' || ext=='html'){
+			text_ct=formatHTML(text_ct);
+		}
+		*/
+		text_ct=replaceAll(text_ct,'&','&amp;');
+		text_ct=replaceAll(text_ct,'<','&lt;');
+		text_ct=replaceAll(text_ct,'>','&gt;');
+		text_ct=replaceAll(text_ct,'"','&quot;');
+		text_ct=replaceAll(text_ct,'\'','&apos;');
+		//text_ct=text_ct.replace(/(?:\r\n|\r|\n)/g, '<br>');
+		//text_ct=text_ct.replace('<br>', '\r\n<br>');
+		text_ct='<button type="button" class="buttonhighlight_1" id="highlight_p" onclick="higlight_fn()" >CodeHighlight</button><pre><code>'+text_ct+'</code></pre>';
+		
+		filespage_html=text_ct;
+		}else if(image_extensions.includes(ext)){
+		filespage_html="<img src='data:"+mimeType+";base64,"+ContentRetrieved['data'][2]+"'>";
+		}else{
+		filespage_html='file not displayed.';
+		}
 	}
 	})
 .catch(error => {filespage_html='an error occured when retrieving';changepage1();console.log(error);});
-}
 }
 }
 
@@ -1315,7 +1499,6 @@ document.getElementById("password1").value='';
 
 
 
-
 function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 Bytes'
     const k = 1024
@@ -1372,7 +1555,9 @@ async function listRepoContents(owner, repo, path = '', token = '') {
     
     // Parse the JSON response
     const contents = await response.json();
-	jdata=[];
+	let data_1=[];
+	let data_2=[];
+	let jdata=[];
     
     // Process each item in the repository
 	let lastModified = '';
@@ -1385,14 +1570,15 @@ async function listRepoContents(owner, repo, path = '', token = '') {
         //let lastModified = '';
         //console.log(`File: ${item.path}, Size: ${item.size} bytes, Last Modified: ${lastModified}`);
 		//console.log(`File: ${item.path}, Size: ${item.size} bytes`);
-		jdata.push([item.path,'file',item.size,lastModified])
+		data_2.push([item.path,'file',item.size,lastModified])
       } else if (item.type === 'dir') {
         //console.log(`Folder: ${item.path}`);
-		jdata.push([item.path,'folder','',lastModified])
+		data_1.push([item.path,'folder','',lastModified])
         // Recursively fetch contents of subdirectories
         //await listRepoContents(owner, repo, item.path, token);
       }
     }
+	jdata=data_1.concat(data_2)
 	return jdata;
   } catch (error) {
     console.error('Error fetching repository contents:', error.message);
@@ -1415,6 +1601,75 @@ window.onload = async () => {
 };
 // Call the function
 
+
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
+function replaceAll(str, find, replace) {
+  return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+}
+
+/*
+function formatHTML(html) {
+    var tab = '\t';
+    var result = '';
+    var indent= '';
+
+    html.split(/>\s*</).forEach(function(element) {
+        if (element.match( /^\/\w/ )) {
+            indent = indent.substring(tab.length);
+        }
+
+        result += indent + '<' + element + '>\r\n';
+
+        if (element.match( /^<?\w[^>]*[^\/]$/ ) && !element.startsWith("input")  ) { 
+            indent += tab;
+			}
+    });
+
+    return result.substring(1, result.length-3);
+}
+*/
+
+function higlight_fn(in_txt){
+let src_c1="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css";
+
+let src_1="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js";
+let src_a1="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/vbscript-html.min.js";
+let src_a2="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js";
+let src_a3="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js";
+let src_a4="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js";
+
+if (!jsloadedflag){
+var fileref = document.createElement("link");
+fileref.rel = "stylesheet";
+fileref.type = "text/css";
+fileref.href = src_c1;
+document.getElementsByTagName("head")[0].appendChild(fileref)
+
+loadJs(src_1);
+loadJs(src_a1);
+loadJs(src_a2);
+loadJs(src_a3);
+loadJs(src_a4);
+
+}
+jsloadedflag=true;
+hljs.highlightAll();
+}
+
+var jsloadedflag = false;
+
+function loadJs(url) {
+  var script = document.createElement('script');
+  script.setAttribute('src', url);
+  script.setAttribute('type', 'text/javascript');
+  //script.onload = loadFunction;
+  //script.onreadystatechange = loadFunction;
+  document.getElementsByTagName("head")[0].appendChild(script);
+};
 
 </script>
 </script>
