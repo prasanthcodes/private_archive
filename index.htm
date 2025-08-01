@@ -205,6 +205,8 @@ var filetype=''
 // Example usage
 var owner = 'google'; // Replace with the repository owner's username
 var repo = 'mobly'; // Replace with the repository name
+var starting_path_1='docs'
+var starting_path_2='mobly'
 var token = ''; // Replace with your GitHub personal access token if accessing a private repo
 
 
@@ -477,9 +479,13 @@ if ((columnIndex==2)&(filetype=='file')){
 console.log(filepath)
 await view_function(filepath);
 await changepage1();
-
 }
 
+if ((columnIndex==2)&(filetype=='folder')){
+console.log(filepath)
+await open_function_1(filepath);
+await changepage1();
+}
 
 var formdata1 = new FormData();
 formdata1.append('username1', username1);
@@ -911,6 +917,7 @@ table.addEventListener('click', async (event) => {
 		const cellContent = cell.textContent;
 		output.textContent = JSON.stringify({ rowId, columnIndex, cellContent }, null, 2);
 		filepath = row.getAttribute('data-path');
+		current_path=filepath
 		filetype = row.getAttribute('data-type');
 		console.log('filepath',filepath)
 		await All_operations(filepath, filetype, rowId,  columnIndex,'')
@@ -1303,6 +1310,13 @@ return [link,ext];
 
 document.getElementById('back_a').addEventListener('click', async function(){
 current_path=current_path.substring(0, current_path.lastIndexOf('/'));
+if (current_path==''){
+if (PrivateMode_flag==false){
+current_path=starting_path_1
+} else {
+current_path=starting_path_2
+}
+}
 await open_function_1(current_path);
 }, false);
 
@@ -1503,7 +1517,7 @@ const mimeTypes = {
 
 window.onload = async () => {
   try {
-	await open_function_1('');
+	await open_function_1(starting_path_1);
 	//await changepage1();
 
   } catch (error) {
