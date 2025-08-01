@@ -104,8 +104,7 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 <!--script src="github_issues_list.js"></script-->
 
 <!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script-->
-<script src="//bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mime@3.0.0/dist/mime.min.js"></script>
+<script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
 
 <script>
 //var folder_icon='open-folder.png';
@@ -178,7 +177,7 @@ var current_path='';
 var username1='';
 var password1='';
 var lgid=0;
-var CryptMode_flag=false;
+var PrivateMode_flag=false;
 
 var viewcontent1=document.getElementById('viewcontent1');
 var span_currentpage = document.getElementById('span_currentpage');
@@ -197,16 +196,16 @@ var selected_files=[];
 var selected_files_mvcp=[];
 var move_or_copy=0;
 var foldersrc=[];
-var image_extensions=['jpg','jpeg','png','gif','bmp','webp','svg'];
+var image_extensions=['jpg','jpeg','png','gif','bmp','webp','svg','tiff','tif','ico'];
 var filename2_last='';
 var jdata='';
 var filepath=''
 var filetype=''
 
 // Example usage
-const owner = 'google'; // Replace with the repository owner's username
-const repo = 'mobly'; // Replace with the repository name
-const token = ''; // Replace with your GitHub personal access token if accessing a private repo
+var owner = 'google'; // Replace with the repository owner's username
+var repo = 'mobly'; // Replace with the repository name
+var token = ''; // Replace with your GitHub personal access token if accessing a private repo
 
 
 document.getElementById('publicpage_a').addEventListener('click', changepage1, false);
@@ -307,7 +306,7 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
   let filename2=file.name;
   let ext=filename2.split('.').pop().toLowerCase();
 // crypt mode
-if (CryptMode_flag){
+if (PrivateMode_flag){
 let pwout2=await get_CMode_password();
 if (pwout2[0]){
 let key=pwout2[1];
@@ -353,7 +352,7 @@ getselectedfiles();
 if (selected_files.length<1){
 span_status.innerHTML='no files selected.';
 } else {
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files=get_ico_indices(selected_files);
 }
 
@@ -389,7 +388,7 @@ span_status.innerHTML='no files selected.';
 } else {
 move_or_copy=1;
 foldersrc=folderroot.slice();
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files_mvcp=get_ico_indices(selected_files_mvcp);
 }
 span_status.innerHTML=selected_files_mvcp.length+' items ready to move. select destination directory and click paste button.';
@@ -403,7 +402,7 @@ span_status.innerHTML='no files selected.';
 } else {
 move_or_copy=2;
 foldersrc=folderroot.slice();
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files_mvcp=get_ico_indices(selected_files_mvcp);
 }
 span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select destination directory and click paste button.';
@@ -446,7 +445,7 @@ span_status.innerHTML='no files selected.';
 } else {
 let pwout=get_spassword();
 if (pwout[0]){
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files=get_ico_indices(selected_files);
 }
 content={'operation': 'zip','folderroot':folderroot,'selected':selected_files};
@@ -477,6 +476,7 @@ console.log(columnIndex)
 if ((columnIndex==2)&(filetype=='file')){
 console.log(filepath)
 await view_function(filepath);
+await changepage1();
 
 }
 
@@ -532,7 +532,7 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
   let filename2=file.name;
   let ext=filename2.split('.').pop().toLowerCase();
 // crypt mode
-if (CryptMode_flag){
+if (PrivateMode_flag){
 let pwout2=await get_CMode_password();
 if (pwout2[0]){
 let key=pwout2[1];
@@ -578,7 +578,7 @@ getselectedfiles();
 if (selected_files.length<1){
 span_status.innerHTML='no files selected.';
 } else {
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files=get_ico_indices(selected_files);
 }
 
@@ -614,7 +614,7 @@ span_status.innerHTML='no files selected.';
 } else {
 move_or_copy=1;
 foldersrc=folderroot.slice();
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files_mvcp=get_ico_indices(selected_files_mvcp);
 }
 span_status.innerHTML=selected_files_mvcp.length+' items ready to move. select destination directory and click paste button.';
@@ -628,7 +628,7 @@ span_status.innerHTML='no files selected.';
 } else {
 move_or_copy=2;
 foldersrc=folderroot.slice();
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files_mvcp=get_ico_indices(selected_files_mvcp);
 }
 span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select destination directory and click paste button.';
@@ -671,7 +671,7 @@ span_status.innerHTML='no files selected.';
 } else {
 let pwout=get_spassword();
 if (pwout[0]){
-if(CryptMode_flag){
+if(PrivateMode_flag){
 selected_files=get_ico_indices(selected_files);
 }
 content={'operation': 'zip','folderroot':folderroot,'selected':selected_files};
@@ -713,7 +713,7 @@ if (ContentRetrieved['status']=='ok'){
 
 jdata=ContentRetrieved['data'];
 
-if (!CryptMode_flag){
+if (!PrivateMode_flag){
 
 filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
 for (let i=0;i<jdata[1].length;i++) {
@@ -877,9 +877,11 @@ await changepage1();
 async function changepage1(){
 document.body.style.backgroundColor = "";
 
-if (!CryptMode_flag){
+if (!PrivateMode_flag){
 viewcontent1.innerHTML=filespage_html;
-span_currentpage.innerHTML='CurrentPage: FilesPage';
+span_currentpage.innerHTML='CurrentPage: PublicPage';
+} else {
+span_currentpage.innerHTML='CurrentPage: PrivatePage';
 }
 
 selected_files=[];
@@ -925,7 +927,7 @@ span_currentpage.innerHTML='CurrentPage: StatusPage';
 async function changepage3(){
 document.body.style.backgroundColor = "#eef";
 
-if (!CryptMode_flag){
+if (!PrivateMode_flag){
 viewcontent1.innerHTML=filespage_html;
 span_currentpage.innerHTML='CurrentPage: ServePage';
 
@@ -996,8 +998,8 @@ await get_filespage(folderroot);
 }
 }
 
-function view_function(filepath){
-let text_extensions=['txt','csv','htm','html','css','js','yml','md','toml','ini'];
+async function view_function(filepath){
+let text_extensions=['txt','csv','htm','html','css','js','sh','py','java','c','cpp','go','r','php','rb','cs','ts','json','yml','md','toml','ini','xml','cfg','rst','tsv','log','sql','bash'];
 let filename=filepath.split('\\').pop().split('/').pop();;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(image_extensions.includes(ext) || text_extensions.includes(ext))){
@@ -1005,94 +1007,15 @@ let datestr=Date().toString().substr(0,24);
 span_status.innerHTML=datestr+', file format not viewable.';
 } else {
 
+var ResOut = await getGitHubFile(owner, repo, filepath, token = '')
 
-var fileData = await getGitHubFile(owner, repo, path, token = '')
-fileData.content
-/*
-fetch(filepath)
-.then(response=>response.text())
-.then(response => {
-	if (!response.ok) {
-		filespage_html='an error occured when retrieving';
-		changepage1();
-	} else {
-        var mimeType = response.headers.get('Content-Type');
-		console.log(mimeType)
-        var filedata = response.text();
-		let statusnow=Date().toString().substr(0,24)+' file retrieved.';
-		span_status.innerHTML=statusnow;
-		statuspage_html+=statusnow+'<br>';
-		if (text_extensions.includes(ext)){
-		text_ct=ContentRetrieved['data'][2];
-		/*
-		if (ext=='htm' || ext=='html'){
-			text_ct=formatHTML(text_ct);
-		}
-		*/
-		/*
-		text_ct=replaceAll(text_ct,'&','&amp;');
-		text_ct=replaceAll(text_ct,'<','&lt;');
-		text_ct=replaceAll(text_ct,'>','&gt;');
-		text_ct=replaceAll(text_ct,'"','&quot;');
-		text_ct=replaceAll(text_ct,'\'','&apos;');
-		//text_ct=text_ct.replace(/(?:\r\n|\r|\n)/g, '<br>');
-		//text_ct=text_ct.replace('<br>', '\r\n<br>');
-		text_ct='<button type="button" class="buttonhighlight_1" id="highlight_p" onclick="higlight_fn()" >CodeHighlight</button><pre><code>'+text_ct+'</code></pre>';
-		
-		filespage_html=text_ct;
-		}else if(image_extensions.includes(ext)){
-		filespage_html="<img src='data:"+mimeType+";base64,"+ContentRetrieved['data'][2]+"'>";
-		}else{
-		filespage_html='file not displayed.';
-		}
-	}
-	})
-.catch(error => {filespage_html='an error occured when retrieving';changepage1();console.log(error);});
-*/
-}
-}
-
-function view_function2(){
-let id=this.id;
-if(id[0]=='b'){
-//folderroot=[];
-let text_extensions=['txt','csv','htm','html','css','js'];
-folderroot.push(parseInt(id.substr(3,) , 10));
-content={'operation': 'download','folderroot':folderroot.slice()};
-//folderroot.pop();
-let down_filename='';
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(res => {
-var splited=res.headers.get("content-disposition").split('=');
-down_filename = '';
-for (let j=1;j<splited.length;j++){down_filename=down_filename+splited[j]+'='}
-down_filename=down_filename.slice(0,-1);
-return res.blob();
-})
-.then(data => {
-if (CryptMode_flag){
-get_CMode_password().then(pwout=>{
-let key=pwout[1];
-var key_clone1=get_keyclone(key);
-let filename2_b64=down_filename;
-let filename2_promise=encbase64name2filename(filename2_b64,key);
-filename2_promise.then(filename2=>{
-let ext=filename2.split('.').slice(-1)[0].toLowerCase();
-if (image_extensions.includes(ext) || (text_extensions.includes(ext))){
-let data2sav_promise= run_all_op2('',data,'',key_clone1);
-data2sav_promise.then(data2sav=>{
-  var file_2 = new Blob([data2sav[0].buffer], {type: 'octet/stream'});
-  //a.href = window.URL.createObjectURL(file_2);
-  //a.download = filename2;
+mimeType = getMimeType(ext);
+var filedata = ResOut.content;
+let statusnow=Date().toString().substr(0,24)+' file retrieved.';
+span_status.innerHTML=statusnow;
+statuspage_html+=statusnow+'<br>';
 if (text_extensions.includes(ext)){
-var string = new TextDecoder().decode(data2sav[0]);
-let text_ct=string;
+text_ct=filedata;
 /*
 if (ext=='htm' || ext=='html'){
 	text_ct=formatHTML(text_ct);
@@ -1104,24 +1027,19 @@ text_ct=replaceAll(text_ct,'>','&gt;');
 text_ct=replaceAll(text_ct,'"','&quot;');
 text_ct=replaceAll(text_ct,'\'','&apos;');
 //text_ct=text_ct.replace(/(?:\r\n|\r|\n)/g, '<br>');
+//text_ct=text_ct.replace('<br>', '\r\n<br>');
 text_ct='<button type="button" class="buttonhighlight_1" id="highlight_p" onclick="higlight_fn()" >CodeHighlight</button><pre><code>'+text_ct+'</code></pre>';
-cryptpage_html=text_ct;
-changepage1();
-} else if(image_extensions.includes(ext)){
-img_t=new Image();
-img_t.src=window.URL.createObjectURL(file_2);
-document.getElementById('viewcontent1').innerHTML='';
-document.getElementById('viewcontent1').appendChild(img_t);
-//cryptpage_html="<img src='data:"+mime+";base64,"+ContentRetrieved['data'][2]+"'>";
-//changepage1();
+
+filespage_html=text_ct;
+path_status.innerHTML=filepath;
+}else if(image_extensions.includes(ext)){
+filespage_html="<img src='data:"+mimeType+";base64,"+ContentRetrieved['data'][2]+"'>";
+path_status.innerHTML=filepath;
+}else{
+//filespage_html='file not displayed.';
+span_status.innerHTML=datestr+', file format not viewable.';
 }
 
-}).catch(error => {console.log(error);cryptpage_html='error decoding file data.';changepage1();}); 
-} else {cryptpage_html='file format not viewable.';changepage1();}
-}).catch(error => {console.log(error);cryptpage_html='error translating file name.';changepage1();}); 
-}).catch(error => {console.log(error);cryptpage_html='pw not correctly readed.';changepage1();}); 
-} else {cryptpage_html='cmode not on.';changepage1();}
-}).catch(error => {console.log(error);cryptpage_html='error retrieving file data.';changepage1();}); 
 }
 }
 
@@ -1201,7 +1119,7 @@ let fname='';
 if(id[0]=='a'){
 folderroot.push(parseInt(id.substr(3,) , 10));
 
-if (CryptMode_flag){
+if (PrivateMode_flag){
 oldname=document.getElementById('a0_'+id.substr(3,)).textContent;
 } else {
 oldname=document.getElementById('a3_'+id.substr(3,)).textContent;
@@ -1212,7 +1130,7 @@ folderroot.pop();
 }
 if(id[0]=='b'){
 new_id=parseInt(id.substr(3,) , 10);
-if (CryptMode_flag){
+if (PrivateMode_flag){
 let pwout2=await get_CMode_password();
 if (pwout2[0]){
 let key=pwout2[1];
@@ -1249,7 +1167,7 @@ await fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 	get_filespage(folderroot);
 	changepage1();
 	
-if(CryptMode_flag){
+if(PrivateMode_flag){
 if (fname.slice(-7)=='_im.raw'){
 let ico_name=fname.slice(0,-7)+'_ic.raw';
 let idx=jdata[2].indexOf(ico_name);
@@ -1289,7 +1207,7 @@ let id=this.id;
 if(id[0]=='b'){
 //folderroot=[];
 var pwout=[];
-if (CryptMode_flag){
+if (PrivateMode_flag){
 let id_name='c1' + id.substring(2,);
 let filename=document.getElementById(id_name).innerText;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
@@ -1328,7 +1246,7 @@ down_filename=down_filename.slice(0,-1);
 return res.blob();
 })
 .then(data => {
-if (CryptMode_flag){
+if (PrivateMode_flag){
 let key=pwout[1];
 var key_clone1=get_keyclone(key);
 let filename2_b64=down_filename;
@@ -1355,123 +1273,6 @@ data2sav_promise.then(data2sav=>{
 }
 }
 
-async function edit_function2(){
-let id=this.id;
-if(id[0]=='b'){
-//folderroot=[];
-var pwout=[];
-var ext_1='';
-if (CryptMode_flag){
-let id_name='c1' + id.substring(2,);
-let realname=document.getElementById('c0' + id.substring(2,)).innerText;
-ext_1=realname.split('.').pop().toLowerCase();
-let filename=document.getElementById(id_name).innerText;
-let ext=filename.split('.').pop().toLowerCase();
-if (ext!='raw'){
-span_status.innerHTML='cant edit this file type in CMode';
-return;
-} else {
-pwout=await get_CMode_password();
-if (pwout[0]==false){
-span_status.innerHTML='cmode password incorrect';
-return;
-}
-}
-}
-
-if (ext_1=='txt'){
-folderroot.push(parseInt(id.substr(3,) , 10));
-content={'operation': 'download','folderroot':folderroot.slice()};
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(res => {
-var splited=res.headers.get("content-disposition").split('=');
-down_filename = '';
-for (let j=1;j<splited.length;j++){down_filename=down_filename+splited[j]+'='}
-down_filename=down_filename.slice(0,-1);
-return res.blob();
-})
-.then(data => {
-if (CryptMode_flag){
-let key=pwout[1];
-var key_clone1=get_keyclone(key);
-let filename2_b64=down_filename;
-encbase64name2filename(filename2_b64,key).then(filename2=>{
-let ext2=filename2.split('.').pop().toLowerCase();
-if (ext2=='txt'){
-run_all_op2('',data,'',key_clone1).then(data2sav=>{
-var text_retrieved=new TextDecoder().decode(data2sav[0].buffer);
-cryptpage_html="<input type='text' id='filename2_new' name='filename2_new' value='"+filename2+"'><br><label for='content'>content:</label><br><textarea id='content1' name='content1' rows='35' cols='100'>"+text_retrieved+"</textarea><br><button id='edit_submit' onclick='upload_function2()'>Submit</button>";
-changepage1();
-//document.getElementById('edit_submit').addEventListener('click', upload_function2, false);
-let statusnow=Date().toString().substr(0,24)+' Content Retrieved.';
-span_status.innerHTML=statusnow;
-
-}).catch(error => {cryptpage_html="an error occured while decypering data.";changepage1();console.log(error);}); 
-} else {cryptpage_html="non text files are not editable.";changepage1();}
-}).catch(error => {cryptpage_html="an error occured while decypering name.";changepage1();console.log(error);}); 
-}
-})
-.catch(error => {cryptpage_html="an error occured when retrieving.";changepage1();console.log(error);}); 
-} else {span_status.innerHTML='non text files not editable in CMode';}
-}
-}
-
-async function upload_function2(){
-let pwout=get_spassword();
-if (pwout[0]){
-folderroot.pop();
-content={'operation': 'upload','folderroot':folderroot,'replace':true};
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-
-let upcontent=document.getElementById('content1').value;
-let filename2_new=document.getElementById('filename2_new').value;
-let file=new File([upcontent], filename2_new,{type: 'application/octet-stream'});
-//let uarray_1=new TextEncoder().encode(string);
-let filename2=file.name;
-let ext=filename2.split('.').pop().toLowerCase();
-// crypt mode
-if (CryptMode_flag){
-let pwout2=await get_CMode_password();
-if (pwout2[0]){
-let key=pwout2[1];
-var key_clone1=get_keyclone(key);
-//---prepare crypt file-----
-let filename2_b64=await filename2encbase64name(filename2,key);
-let data2sav=await run_all_op(filename2,file,ext,key_clone1);
-var file_2 = new File([data2sav], filename2_b64,{type: 'application/octet-stream'});
-formdata1.append('files[]', file_2);
-
-} else {span_status.innerHTML='cmode password incorrect';}
-} else {formdata1.append('files[]', file);}
-
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-}
-}
 
 async function getdownload_icon(folderroot,key){
 //folderroot.push(parseInt(id.substr(3,) , 10));
@@ -1500,8 +1301,12 @@ return [link,ext];
 }
 
 
-document.getElementById('back_a').addEventListener('click', async function(){folderroot.pop();get_filespage(folderroot);}, false);
-document.getElementById('home_a').addEventListener('click', async function(){folderroot=[];get_filespage(folderroot);}, false);
+document.getElementById('back_a').addEventListener('click', async function(){
+current_path=current_path.substring(0, current_path.lastIndexOf('/'));
+await open_function_1(current_path);
+}, false);
+
+document.getElementById('home_a').addEventListener('click', async function(){current_path='';await open_function_1(current_path);}, false);
 
 document.getElementById('logout_a').addEventListener('click', function(){
 did_loggedin=false;
@@ -1579,9 +1384,8 @@ async function listRepoContents(owner, repo, path = '', token = '') {
     for (const item of contents) {
       if (item.type === 'file') {
         // Fetch the last commit for the file to get the modified date
-        const commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(item.path)}&per_page=1`;
-        const commitResponse = await fetch(commitUrl, { 
-		});
+        //const commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(item.path)}&per_page=1`;
+        //const commitResponse = await fetch(commitUrl, { });
         //let lastModified = '';
         //console.log(`File: ${item.path}, Size: ${item.size} bytes, Last Modified: ${lastModified}`);
 		//console.log(`File: ${item.path}, Size: ${item.size} bytes`);
@@ -1619,6 +1423,7 @@ async function getGitHubFile(owner, repo, path, token = '') {
         
         // Make the API request
         const response = await fetch(apiUrl, { headers });
+		console.log(response)
         
         // Check if the request was successful
         if (!response.ok) {
@@ -1627,8 +1432,6 @@ async function getGitHubFile(owner, repo, path, token = '') {
         
         // Parse the response
         const data = await response.json();
-		const mimeType = mime.getType(data.name) || 'application/octet-stream';
-        
         // Decode the base64 content
         if (data.content) {
             const decodedContent = atob(data.content.replace(/\n/g, ''));
@@ -1637,7 +1440,6 @@ async function getGitHubFile(owner, repo, path, token = '') {
                 name: data.name,
                 path: data.path,
                 url: data.html_url,
-				mimeType: mimeType
             };
         } else {
             throw new Error('No content found in the response');
@@ -1646,6 +1448,57 @@ async function getGitHubFile(owner, repo, path, token = '') {
         console.error('Error fetching file:', error);
         throw error;
     }
+}
+
+function getMimeType(extension) {
+  // Remove leading dot if present
+  extension = extension.replace(/^\./, '').toLowerCase();
+  
+const mimeTypes = {
+    // Code
+    'js': 'application/javascript',
+    'ts': 'application/typescript',
+    'py': 'text/x-python',
+    'java': 'text/x-java-source',
+    'c': 'text/x-c',
+    'cpp': 'text/x-c++src',
+    'cs': 'text/x-csharp',
+    'go': 'text/x-go',
+    'rb': 'text/x-ruby',
+    'php': 'text/x-php',
+    'html': 'text/html',
+    'css': 'text/css',
+    'scss': 'text/x-scss',
+    'sql': 'text/x-sql',
+    'sh': 'text/x-shellscript',
+    // Configuration
+    'json': 'application/json',
+    'yml': 'application/x-yaml',
+    'yaml': 'application/x-yaml',
+    'xml': 'application/xml',
+    'toml': 'application/toml',
+    'ini': 'text/x-ini',
+    // Documentation
+    'md': 'text/markdown',
+    'rst': 'text/x-rst',
+    'txt': 'text/plain',
+    // Data
+    'csv': 'text/csv',
+    'tsv': 'text/tab-separated-values',
+    // Images
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'svg': 'image/svg+xml',
+    'bmp': 'image/bmp',
+    'tiff': 'image/tiff',
+    'webp': 'image/webp',
+    'ico': 'image/x-icon'
+  };
+
+  // Return MIME type or default to 'application/octet-stream' if unknown
+  return mimeTypes[extension] || 'application/octet-stream';
 }
 
 window.onload = async () => {
