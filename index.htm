@@ -43,6 +43,8 @@ td:nth-child(7) {cursor: pointer;color: #00d;}
 td:nth-child(8) {cursor: pointer;color: #00d;}
 td:nth-child(9) {cursor: pointer;color: #00d;}
 
+td:nth-child(3):hover {background-color: #fdd;}
+
 td:nth-child(3):active {color: red;}
 td:nth-child(6):active {color: red;}
 td:nth-child(7):active {color: red;}
@@ -104,7 +106,8 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 <!--script src="github_issues_list.js"></script-->
 
 <!--script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script-->
-<script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
+<!--script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script-->
+<script src="sjcl.js"></script>
 
 <script>
 //var folder_icon='open-folder.png';
@@ -117,10 +120,12 @@ var file_icon='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT
 </script>
 <script>
 
+console.log('site starting...');
 
 var did_loggedin=false;
 
 var stored_sha256={'1':{'1':'2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc420cb2e0','2':'f7b2205140f1dd73ed8a73950c94edb7bf2a0e34afec969b6a9533df0b490492'}};
+var encdata_1='{"iv":"XZtNavMPE0JcuiSu0YtkBQ==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"HNQnWZ4sjuw=","ct":"MCESbVsN+TsnCTJaT3HdWQfIxiRHDPFaShwT4AMOgMSOdAdmeNEETyAMFMQ/SuWuZByAxw4yEu7/VkY0LOe8WMUxRboBtsKLZN3r8aN/aNfflyKOCbtSyreNq2eHHWJXH+FQfR4="}'
 
 async function digestMessage(message) {
   const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
@@ -161,13 +166,13 @@ did_loggedin=true;
 document.getElementById('div_login').style.display = 'none';
 document.getElementById('topgroup_1').style.display = 'block';
 
-//get_filespage(folderroot);
-ChangePageMode();
+await ChangePageMode();
 
+//crypt_example();
+//token=sjcl.decrypt(username1+password1, encdata_1);
+token='';
 }
-
 }
-
 }
 
 document.getElementById("submit_btn").addEventListener("click", call_submit);
@@ -198,15 +203,16 @@ var foldersrc=[];
 var image_extensions=['jpg','jpeg','png','gif','bmp','webp','svg','tiff','tif','ico'];
 var filename2_last='';
 var jdata='';
-var filepath=''
-var filetype=''
+var filepath='';
+var filetype='';
 
 // Example usage
-var owner = 'google'; // Replace with the repository owner's username
-var repo = 'mobly'; // Replace with the repository name
-var starting_path_1='docs'
-var starting_path_2='mobly'
-var token = ''; // Replace with your GitHub personal access token if accessing a private repo
+var owner = 'prasanthcodes';//google
+var repo = 'private_archive';//mobly
+var branch = 'main';
+var token = '';
+var starting_path_1='public_files';
+var starting_path_2='private_files';
 
 
 document.getElementById('publicpage_a').addEventListener('click', set_pageflag, false);
@@ -226,7 +232,7 @@ ChangePageMode()
 
 var elements = document.getElementsByClassName('buttongroup_1');
 for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', MainFunction, false);
+    elements[i].addEventListener('click', ButtonGroup1_Functions, false);
 }
 
 var phonesite_flag=false;
@@ -266,42 +272,21 @@ document.head.appendChild(styleSheet);
 }
 
 
-async function MainFunction(){
+async function ButtonGroup1_Functions(){
 var formdata1 = new FormData();
 formdata1.append('username1', username1);
 formdata1.append('password1', password1);
 formdata1.append('id', lgid);
 
-if (this.id=='createfo_p'){
-//content={'operation': 'createfolder','folderroot':[0,1],'selected': [0,2,3,4],'name_in':name_in,'folderdestination':[0,1],'content':'text data'};
-let name_in = prompt("enter folder name:", "new");
-content={'operation': 'createfolder','folderroot':folderroot,'name_in':name_in};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	get_filespage(folderroot);
-	});
+if (this.id=='createfo_a'){
+let folderName = prompt("enter folder name:", "new");
+await createFolderInGitHub(owner,repo,folderName,branch,token).catch(console.error);
+await open_function_1(current_path);
 
-} else if (this.id=='createfi_p'){
-let name_in = prompt("enter file name:", "new.txt");
-content={'operation': 'createfile','folderroot':folderroot,'name_in':name_in};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{ 
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	get_filespage(folderroot);
-	});
+} else if (this.id=='createfi_a'){
+let fileName = prompt("enter file name:", "new.txt");
+await createFileInGitHub(owner,repo,fileName,branch,token).catch(console.error);
+await open_function_1(current_path);
 
 } else if (this.id=='uploadf_b'){
 var uploadbrowse=document.getElementById('fileuploadid1');
@@ -392,20 +377,7 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 
 } else if (this.id=='move_b'){
 span_status.innerHTML='move operation not working.';
-/*
-getselectedfiles();
-selected_files_mvcp=selected_files.slice();
-if (selected_files_mvcp.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-move_or_copy=1;
-foldersrc=folderroot.slice();
-if(PrivateMode_flag){
-selected_files_mvcp=get_ico_indices(selected_files_mvcp);
-}
-span_status.innerHTML=selected_files_mvcp.length+' items ready to move. select destination directory and click paste button.';
-}
-*/
+
 } else if (this.id=='copy_b'){
 getselectedfiles();
 selected_files_mvcp=selected_files.slice();
@@ -450,51 +422,17 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 }
 }
 
-} else if (this.id=='zip_b'){
-getselectedfiles();
-if (selected_files.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-let pwout=get_spassword();
-if (pwout[0]){
-if(PrivateMode_flag){
-selected_files=get_ico_indices(selected_files);
-}
-content={'operation': 'zip','folderroot':folderroot,'selected':selected_files};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-}
-}
 }
 }
 
-async function All_operations(filepath,filetype,rowId,columnIndex,identifier){
-
-console.log(columnIndex)
+async function Table1_Functions(filepath,filetype,rowId,columnIndex,identifier){
 if ((columnIndex==2)&(filetype=='file')){
-console.log(filepath)
 await view_function(filepath);
 await ChangePageMode();
 }
 
 if ((columnIndex==2)&(filetype=='folder')){
-console.log(filepath)
 await open_function_1(filepath);
-await ChangePageMode();
 }
 
 var formdata1 = new FormData();
@@ -885,6 +823,7 @@ for (let i=0;i<jdata.length;i++) {
 }
 filespage_html+='</table><br>';
 
+current_path=path;
 path_status.innerHTML=path;
 statuspage_html+=Date().toString().substr(0,24)+' page loaded. path: '+path+'<br>'; 
 await ChangePageMode();
@@ -937,8 +876,8 @@ table.addEventListener('click', async (event) => {
 		filepath = row.getAttribute('data-path');
 		current_path=filepath
 		filetype = row.getAttribute('data-type');
-		console.log('filepath',filepath)
-		await All_operations(filepath, filetype, rowId,  columnIndex,'')
+		console.log('current_path frm table:',current_path);
+		await Table1_Functions(filepath, filetype, rowId,  columnIndex,'')
 	}
 });
 }
@@ -1065,7 +1004,6 @@ path_status.innerHTML=filepath;
 //filespage_html='file not displayed.';
 span_status.innerHTML=datestr+', file format not viewable.';
 }
-
 }
 }
 
@@ -1330,10 +1268,10 @@ return [link,ext];
 document.getElementById('back_a').addEventListener('click', async function(){
 current_path=current_path.substring(0, current_path.lastIndexOf('/'));
 if (current_path==''){
-if (PrivateMode_flag==false){
-current_path=starting_path_1
-} else {
-current_path=starting_path_2
+if (PageModeFlag==1){
+current_path=starting_path_1;
+} else if (PageModeFlag==2){
+current_path=starting_path_2;
 }
 }
 await open_function_1(current_path);
@@ -1363,16 +1301,16 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 
-//const message = "Hello, secure world!";
+function crypt_example(){
 const message = `"Hello, secure world!"`;
-
 const pwd = username1+password1;//"1234567890";
 //const bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 var encrypted = sjcl.encrypt(pwd, message)
-var jsObject = JSON.parse(encrypted);
-console.log("Encrypted:", jsObject);
+//var jsObject = JSON.parse(encrypted);
+console.log("Encrypted:", encrypted);
 const decrypted = sjcl.decrypt(pwd, encrypted)
 console.log("Decrypted:", decrypted);
+}
 
 function handleForm(event) {
 	event.preventDefault(); // Prevent default form submission
@@ -1385,6 +1323,7 @@ function handleForm(event) {
 
 
 async function listRepoContents(owner, repo, path = '', token = '') {
+console.log('in',path);
   try {
     // Construct the GitHub API URL for the repository contents
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
@@ -1404,7 +1343,10 @@ async function listRepoContents(owner, repo, path = '', token = '') {
     
     // Check if the response is successful
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+		let error_str=`HTTP error! Status: ${response.status}`
+		let statusnow=Date().toString().substr(0,24)+', '+error_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
     }
     
     // Parse the JSON response
@@ -1434,7 +1376,10 @@ async function listRepoContents(owner, repo, path = '', token = '') {
 	jdata=data_1.concat(data_2)
 	return jdata;
   } catch (error) {
-    console.error('Error fetching repository contents:', error.message);
+	let error_str='Error fetching repository contents:'+ error.message
+	let statusnow=Date().toString().substr(0,24)+', '+error_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
   }
 }
 
@@ -1457,11 +1402,14 @@ async function getGitHubFile(owner, repo, path, token = '') {
         
         // Make the API request
         const response = await fetch(apiUrl, { headers });
-		console.log(response)
         
         // Check if the request was successful
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+			let error_str=`HTTP error! status: ${response.status}`
+			let statusnow=Date().toString().substr(0,24)+', '+error_str;
+			span_status.innerHTML=statusnow;
+			statuspage_html+=statusnow+'<br>';
+            throw new Error(error_str);
         }
         
         // Parse the response
@@ -1476,12 +1424,95 @@ async function getGitHubFile(owner, repo, path, token = '') {
                 url: data.html_url,
             };
         } else {
-            throw new Error('No content found in the response');
+			let error_str='No content found in the response'
+			let statusnow=Date().toString().substr(0,24)+', '+error_str;
+			span_status.innerHTML=statusnow;
+			statuspage_html+=statusnow+'<br>';
+            throw new Error(error_str);
         }
     } catch (error) {
-        console.error('Error fetching file:', error);
+		let error_str='Error fetching file:'+error
+		let statusnow=Date().toString().substr(0,24)+', '+error_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
         throw error;
     }
+}
+
+async function createFolderInGitHub(owner,repo,folderName,branch,token) {
+  //const token = 'YOUR_PERSONAL_ACCESS_TOKEN'; 
+  //const owner = 'YOUR_USERNAME'; // Replace with your GitHub username or organization
+  //const repo = 'YOUR_REPOSITORY'; // Replace with your repository name
+  const folderPath = folderName+'/.gitkeep'; // The folder and file to create
+  const content = ''; // Base64 encode the file content
+  const message = 'Create a new folder';
+  //const branch = 'main'; // Replace with your target branch (e.g., 'master' or 'main')
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${folderPath}`;
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    },
+    body: JSON.stringify({
+      message: message,
+      content: content,
+      branch: branch,
+      //committer: {name: 'Your Name',email: 'your.email@example.com'}
+    })
+  });
+
+let status_str='';
+  if (response.ok) {
+	status_str='Folder created successfully!';
+    const result = await response.json();
+  } else {
+    const error = await response.json();
+    status_str='Error:'+error.message;
+  }
+let statusnow=Date().toString().substr(0,24)+', '+status_str;
+span_status.innerHTML=statusnow;
+statuspage_html+=statusnow+'<br>';
+console.log(status_str);
+}
+
+async function createFileInGitHub(owner,repo,fileName,branch,token) {
+  const content = ''; // Base64 encode the file content
+  const message = 'Create a new file';
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    },
+    body: JSON.stringify({
+      message: message,
+      content: content,
+      branch: branch,
+      //committer: {name: 'Your Name',email: 'your.email@example.com'}
+    })
+  });
+
+let status_str='';
+  if (response.ok) {
+	status_str='File created successfully!';
+    const result = await response.json();
+  } else {
+    const error = await response.json();
+    status_str='Error:'+error.message;
+  }
+let statusnow=Date().toString().substr(0,24)+', '+status_str;
+span_status.innerHTML=statusnow;
+statuspage_html+=statusnow+'<br>';
+console.log(status_str);
 }
 
 function getMimeType(extension) {
