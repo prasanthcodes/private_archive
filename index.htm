@@ -54,7 +54,7 @@ td:nth-child(9):active {color: red;}
 </head>
 <body>
 <div id="div_login">
-<form id="myForm" onsubmit="handleForm(event)">
+<form id="myForm">
   <label style="font-size:1.1em"><b>Private Web Portal </b></label>
   <input type="text" name="username" id="username1" maxlength="32" placeholder="Username">
   <input type="password" name="password" id="password1" maxlength="32" placeholder="Password">
@@ -92,14 +92,10 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 <br>
 </div>
 <div id="viewcontent1">
-<table id="table1"><tbody><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all"></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr><tr><td>1</td><td><input type="checkbox" id="0" name="list_c"></td><td><span id="a0_0" class="act0"><u>temp1</u></span></td><td></td><td>2025-07-03 07:31:11</td><td></td><td></td><td><span id="a3_10" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>12</td><td><input type="checkbox" id="11" name="list_c"></td><td><span id="a0_11" class="act0"><u>texts_1</u></span></td><td></td><td>2025-06-14 06:05:35</td><td></td><td></td><td><span id="a3_11" class="act3"><u>rename</u></span></td><td></td></tr><tr><td>13</td><td><input type="checkbox" id="12" name="list_c"></td><td><span id="b0_0" class="act0_1"><u>fullzip_20241230-014146.zip</u></span></td><td>74.34 MiB</td><td>2024-12-30 01:42:11</td><td><span id="b1_0" class="act1"><u>view</u></span></td><td><span id="b2_0" class="act2"><u>edit</u></span></td><td><span id="b3_0" class="act3"><u>rename</u></span></td><td><span id="b4_0" class="act4"><u>download</u></span></td></tr><tr><td>14</td><td><input type="checkbox" id="13" name="list_c"></td><td><span id="b0_1" class="act0_1"><u>newsites.txt</u></span></td><td>581 Bytes</td><td>2025-01-25 10:38:05</td><td><span id="b1_1" class="act1"><u>view</u></span></td><td><span id="b2_1" class="act2"><u>edit</u></span></td><td><span id="b3_1" class="act3"><u>rename</u></span></td><td><span id="b4_1" class="act4"><u>download</u></span></td></tr></tbody></table><br>
 </div>
 
 </div>
 
-
-
-<div id="result"></div>
 <div id="output">Click a cell to see the row ID, column, and cell content</div>
 
 
@@ -1312,15 +1308,6 @@ const decrypted = sjcl.decrypt(pwd, encrypted)
 console.log("Decrypted:", decrypted);
 }
 
-function handleForm(event) {
-	event.preventDefault(); // Prevent default form submission
-	const form = event.target;
-	const formData = new FormData(form);
-	const data = Object.fromEntries(formData);
-	document.getElementById('result').innerText = `Received: ${data.name}, ${data.email}`;
-	// Process data client-side (e.g., display, store in localStorage)
-}
-
 
 async function listRepoContents(owner, repo, path = '', token = '') {
 console.log('in',path);
@@ -1513,6 +1500,68 @@ let statusnow=Date().toString().substr(0,24)+', '+status_str;
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
 console.log(status_str);
+}
+
+async function renameFileInGitHub() {
+  const token = "your-personal-access-token";
+  const owner = "your-username";
+  const repo = "your-repo";
+  const oldPath = "path/to/old-file.txt";
+  const newPath = "path/to/new-file.txt";
+  const branch = "main";
+
+  try {
+    // Step 1: Get file SHA and content
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${oldPath}?ref=${branch}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      }
+    );
+    const fileData = await response.json();
+
+    // Step 2: Create file with new name
+    await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${newPath}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+        body: JSON.stringify({
+          message: `Rename ${oldPath} to ${newPath}`,
+          content: fileData.content,
+          sha: fileData.sha,
+          branch,
+        }),
+      }
+    );
+
+    // Step 3: Delete old file
+    await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${oldPath}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+        body: JSON.stringify({
+          message: `Delete ${oldPath} after rename`,
+          sha: fileData.sha,
+          branch,
+        }),
+      }
+    );
+
+    console.log(`File renamed from ${oldPath} to ${newPath}`);
+  } catch (error) {
+    console.error("Error renaming file:", error.message);
+  }
 }
 
 function getMimeType(extension) {
