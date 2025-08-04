@@ -54,12 +54,10 @@ td:nth-child(9):active {color: red;}
 </head>
 <body>
 <div id="div_login">
-<form id="myForm">
   <label style="font-size:1.1em"><b>Private Web Portal </b></label>
   <input type="text" name="username" id="username1" maxlength="32" placeholder="Username">
   <input type="password" name="password" id="password1" maxlength="32" placeholder="Password">
-  <button type="submit" id="submit_btn">Login</button>
-</form>
+  <button id="submit_btn">Login</button>
 <br>
 </div>
 
@@ -139,25 +137,26 @@ async function digestMessage_sha256(message) {
   return hashHex;
 }
 
+const delayExecution = ms => new Promise(res => setTimeout(res, ms));
+
 async function call_submit(){
 var username0 = document.getElementById("username1").value;
 var password0 = document.getElementById("password1").value;
 if (username0==""){
 alert('username must not be empty.');
-}
-else if (username0.match(/[^-_.\w]/)){
+} else if (username0.match(/[^-_.\w]/)){
 alert('invalid username: username must contain letters,numbers,_-. characters.');
-} else if (await digestMessage_sha256(username0)!=stored_sha256['1']['1']){
+} else if ((await digestMessage_sha256(username0))!=stored_sha256['1']['1']){
 alert('username wrong.');
 } else {
-username1 = await digestMessage(username0);
-
 if (password0==""){
 alert('wrong password.');
-} else if (await digestMessage_sha256(password0)!=stored_sha256['1']['2']){
+} else if ((await digestMessage_sha256(password0))!=stored_sha256['1']['2']){
 alert('wrong password.');
 } else {
 password1 = await digestMessage(password0);
+username1 = await digestMessage(username0);
+
 did_loggedin=true;
 document.getElementById('div_login').style.display = 'none';
 document.getElementById('topgroup_1').style.display = 'block';
@@ -165,8 +164,8 @@ document.getElementById('topgroup_1').style.display = 'block';
 await ChangePageMode();
 
 //crypt_example();
-//token=sjcl.decrypt(username1+password1, encdata_1);
-token='';
+token=sjcl.decrypt(username1+password1, encdata_1);
+//token='';
 }
 }
 }
@@ -193,6 +192,8 @@ var cryptpage_html='';
 var servepage_html='';
 var down_filename='';
 var selected_files=[];
+var selected_files_type=[];
+var folder_selected_flag=false;
 var selected_files_mvcp=[];
 var move_or_copy=0;
 var foldersrc=[];
@@ -276,12 +277,16 @@ formdata1.append('id', lgid);
 
 if (this.id=='createfo_a'){
 let folderName = prompt("enter folder name:", "new");
-await createFolderInGitHub(owner,repo,folderName,branch,token).catch(console.error);
+let filePath=current_path+'/'+folderName
+await createFolderInGitHub(owner,repo,filePath,branch,token).catch(console.error);
+await delayExecution(1000);//1 sec
 await open_function_1(current_path);
 
 } else if (this.id=='createfi_a'){
 let fileName = prompt("enter file name:", "new.txt");
-await createFileInGitHub(owner,repo,fileName,branch,token).catch(console.error);
+let filePath=current_path+'/'+fileName
+await createFileInGitHub(owner,repo,filePath,branch,token).catch(console.error);
+await delayExecution(1000);//1 sec
 await open_function_1(current_path);
 
 } else if (this.id=='uploadf_b'){
@@ -340,37 +345,21 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 } else {span_status.innerHTML='no files to upload';}
 }
 
-} else if (this.id=='delete_b'){
+} else if (this.id=='delete_a'){
 getselectedfiles();
-if (selected_files.length<1){
-span_status.innerHTML='no files selected.';
+if (folder_selected_flag){
+span_status.innerHTML=Date().toString().substr(0,24)+', '+'folders are not deletable.';
 } else {
-if(PrivateMode_flag){
-selected_files=get_ico_indices(selected_files);
+if (selected_files.length<1){
+span_status.innerHTML=Date().toString().substr(0,24)+', '+'no files selected.';
+} else {
+for (let i=0;i<selected_files.length.length;i++) {
+await deleteGitHubFile(owner,repo,selected_files[i],branch,token);
 }
-
-let pwout=get_spassword();
-if (pwout[0]){
-content={'operation': 'delete','folderroot':folderroot,'selected':selected_files};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
+span_status.innerHTML=Date().toString().substr(0,24)+', '+'deleting operation finished.';
+statuspage_html+=Date().toString().substr(0,24)+', '+'deleting operation finished.'+'<br>';
 }
 }
-
 } else if (this.id=='move_b'){
 span_status.innerHTML='move operation not working.';
 
@@ -422,7 +411,7 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 }
 
 async function Table1_Functions(filepath,filetype,rowId,columnIndex,identifier){
-if ((columnIndex==2)&(filetype=='file')){
+if (((columnIndex==2)|(columnIndex==5))&(filetype=='file')){
 await view_function(filepath);
 await ChangePageMode();
 }
@@ -431,217 +420,21 @@ if ((columnIndex==2)&(filetype=='folder')){
 await open_function_1(filepath);
 }
 
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-
-if (this.id=='createfo_p'){
-//content={'operation': 'createfolder','folderroot':[0,1],'selected': [0,2,3,4],'name_in':name_in,'folderdestination':[0,1],'content':'text data'};
-let name_in = prompt("enter folder name:", "new");
-content={'operation': 'createfolder','folderroot':folderroot,'name_in':name_in};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	get_filespage(folderroot);
-	});
-
-} else if (this.id=='createfi_p'){
-let name_in = prompt("enter file name:", "new.txt");
-content={'operation': 'createfile','folderroot':folderroot,'name_in':name_in};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{ 
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	get_filespage(folderroot);
-	});
-
-} else if (this.id=='uploadf_b'){
-var uploadbrowse=document.getElementById('fileuploadid1');
-let pwout=get_spassword();
-if (pwout[0]){
-if(uploadbrowse.files.length>0){
-content={'operation': 'upload','folderroot':folderroot,'name_in':'new.txt'};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-// Append files to files array
-for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
-  let file = uploadbrowse.files[fno];
-  let filename2=file.name;
-  let ext=filename2.split('.').pop().toLowerCase();
-// crypt mode
-if (PrivateMode_flag){
-let pwout2=await get_CMode_password();
-if (pwout2[0]){
-let key=pwout2[1];
-var key_clone1=get_keyclone(key);
-//---prepare crypt file-----
-let filename2_b64=await filename2encbase64name(filename2,key);
-let data2sav=await run_all_op(filename2,file,ext,key_clone1);
-var file_2 = new File([data2sav], filename2_b64,{type: 'application/octet-stream'});
-formdata1.append('files[]', file_2);
-//---prepare crypt image icon file-----
-if (image_extensions.includes(ext)){
-var outname=filename2_b64.slice(0,-6)+'ic.raw';
-var file_jpg_comp=await compress_imgfile_1(file,outname);
-let data2sav2=await run_all_op(filename2,file_jpg_comp,'jpg',key_clone1);
-var file_3 = new File([data2sav2], outname,{type: 'application/octet-stream'});
-formdata1.append('files[]', file_3);
+if ((columnIndex==8)&(filetype=='file')){
+await deleteGitHubFile(owner,repo,filePath,branch,token);
+await delayExecution(1000);//1 sec
+await open_function_1(current_path);
 }
 
-} else {span_status.innerHTML='cmode password incorrect';}
-} else {
-  formdata1.append('files[]', file);
-}
-}
-
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{ 
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-} else {span_status.innerHTML='no files to upload';}
-}
-
-} else if (this.id=='delete_b'){
-getselectedfiles();
-if (selected_files.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-if(PrivateMode_flag){
-selected_files=get_ico_indices(selected_files);
-}
-
-let pwout=get_spassword();
-if (pwout[0]){
-content={'operation': 'delete','folderroot':folderroot,'selected':selected_files};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-}
-}
-
-} else if (this.id=='move_b'){
-span_status.innerHTML='move operation not working.';
-/*
-getselectedfiles();
-selected_files_mvcp=selected_files.slice();
-if (selected_files_mvcp.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-move_or_copy=1;
-foldersrc=folderroot.slice();
-if(PrivateMode_flag){
-selected_files_mvcp=get_ico_indices(selected_files_mvcp);
-}
-span_status.innerHTML=selected_files_mvcp.length+' items ready to move. select destination directory and click paste button.';
-}
-*/
-} else if (this.id=='copy_b'){
-getselectedfiles();
-selected_files_mvcp=selected_files.slice();
-if (selected_files_mvcp.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-move_or_copy=2;
-foldersrc=folderroot.slice();
-if(PrivateMode_flag){
-selected_files_mvcp=get_ico_indices(selected_files_mvcp);
-}
-span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select destination directory and click paste button.';
-}
-
-} else if (this.id=='paste_b'){
-if (selected_files_mvcp.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-let pwout=get_spassword();
-if (pwout[0]){
-if (move_or_copy==1){
-content={'operation': 'move','folderroot':foldersrc,'folderdestination':folderroot,'selected':selected_files_mvcp};
-} else if (move_or_copy==2){
-content={'operation': 'copy','folderroot':foldersrc,'folderdestination':folderroot,'selected':selected_files_mvcp};
-}
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-}
-}
-
-} else if (this.id=='zip_b'){
-getselectedfiles();
-if (selected_files.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-let pwout=get_spassword();
-if (pwout[0]){
-if(PrivateMode_flag){
-selected_files=get_ico_indices(selected_files);
-}
-content={'operation': 'zip','folderroot':folderroot,'selected':selected_files};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-}
+if ((columnIndex==7)&(filetype=='file')){
+let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
+let oldname=filepath.split(/(\\|\/)/g).pop()
+let newname = prompt("enter file name:", oldname);
+if (newname!=null){
+let newPath = onlypath+'/'+newname;
+await renameGitHubFile(owner,repo,filepath,newPath,branch,token);
+await delayExecution(1000);//1 sec
+await open_function_1(current_path);
 }
 }
 }
@@ -789,7 +582,7 @@ await ChangePageMode();
 async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
-//console.log(jdata)
+console.log('jdata',jdata)
 filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
 N_folders=0;
 for (let i=0;i<jdata.length;i++) {
@@ -799,7 +592,7 @@ for (let i=0;i<jdata.length;i++) {
 	let mdate=jdata[i][3];
 	filespage_html+='<tr data-id="'+i+'" data-type="folder" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
 	+'<td>'+name+'</td><td></td><td>'+mdate+'</td>'
-	+'<td></td><td></td><td><u>rename</u></td>'
+	+'<td></td><td></td><td></td>'
 	+'<td></td></tr>';
 	N_folders+=1;
 	}
@@ -925,8 +718,15 @@ window.location.href=url_of_file;
 function getselectedfiles(){
 let checkboxes = document.querySelectorAll('input[name="list_c"]:checked');
 selected_files=[];
+selected_files_type=[];
+folder_selected_flag=false;
 for (var i = 0; i < checkboxes.length; i++) {
-    selected_files.push(checkboxes[i].id);
+	const tr = checkboxes[i].closest('tr');
+	const dataPath = tr.getAttribute('data-path');
+	const datatype = tr.getAttribute('data-type');
+	selected_files.push(dataPath);
+	selected_files_type.push(datatype);
+	if (datatype=='folder'){folder_selected_flag=true}
 }
 }
 
@@ -1288,12 +1088,12 @@ document.getElementById("password1").value='';
 
 
 function formatBytes(bytes, decimals = 2) {
-    if (!+bytes) return '0 Bytes'
-    const k = 1024
-    const dm = decimals < 0 ? 0 : decimals
-    const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+    if (!+bytes) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
 
@@ -1301,7 +1101,7 @@ function crypt_example(){
 const message = `"Hello, secure world!"`;
 const pwd = username1+password1;//"1234567890";
 //const bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
-var encrypted = sjcl.encrypt(pwd, message)
+var encrypted = sjcl.encrypt(pwd, message);
 //var jsObject = JSON.parse(encrypted);
 console.log("Encrypted:", encrypted);
 const decrypted = sjcl.decrypt(pwd, encrypted)
@@ -1330,7 +1130,7 @@ console.log('in',path);
     
     // Check if the response is successful
     if (!response.ok) {
-		let error_str=`HTTP error! Status: ${response.status}`
+		let error_str=`HTTP error! Status: ${response.status}`;
 		let statusnow=Date().toString().substr(0,24)+', '+error_str;
 		span_status.innerHTML=statusnow;
 		statuspage_html+=statusnow+'<br>';
@@ -1363,7 +1163,7 @@ console.log('in',path);
 	jdata=data_1.concat(data_2)
 	return jdata;
   } catch (error) {
-	let error_str='Error fetching repository contents:'+ error.message
+	let error_str='Error fetching repository contents:'+ error.message;
 	let statusnow=Date().toString().substr(0,24)+', '+error_str;
 	span_status.innerHTML=statusnow;
 	statuspage_html+=statusnow+'<br>';
@@ -1392,7 +1192,7 @@ async function getGitHubFile(owner, repo, path, token = '') {
         
         // Check if the request was successful
         if (!response.ok) {
-			let error_str=`HTTP error! status: ${response.status}`
+			let error_str=`HTTP error! status: ${response.status}`;
 			let statusnow=Date().toString().substr(0,24)+', '+error_str;
 			span_status.innerHTML=statusnow;
 			statuspage_html+=statusnow+'<br>';
@@ -1411,7 +1211,7 @@ async function getGitHubFile(owner, repo, path, token = '') {
                 url: data.html_url,
             };
         } else {
-			let error_str='No content found in the response'
+			let error_str='No content found in the response';
 			let statusnow=Date().toString().substr(0,24)+', '+error_str;
 			span_status.innerHTML=statusnow;
 			statuspage_html+=statusnow+'<br>';
@@ -1464,7 +1264,7 @@ let status_str='';
 let statusnow=Date().toString().substr(0,24)+', '+status_str;
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
-console.log(status_str);
+console.log(statusnow);
 }
 
 async function createFileInGitHub(owner,repo,fileName,branch,token) {
@@ -1499,17 +1299,10 @@ let status_str='';
 let statusnow=Date().toString().substr(0,24)+', '+status_str;
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
-console.log(status_str);
+console.log(statusnow);
 }
 
-async function renameFileInGitHub() {
-  const token = "your-personal-access-token";
-  const owner = "your-username";
-  const repo = "your-repo";
-  const oldPath = "path/to/old-file.txt";
-  const newPath = "path/to/new-file.txt";
-  const branch = "main";
-
+async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
   try {
     // Step 1: Get file SHA and content
     const response = await fetch(
@@ -1558,9 +1351,113 @@ async function renameFileInGitHub() {
       }
     );
 
-    console.log(`File renamed from ${oldPath} to ${newPath}`);
+    status_str=`File renamed from ${oldPath} to ${newPath}`;
+	let statusnow=Date().toString().substr(0,24)+', '+status_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
   } catch (error) {
-    console.error("Error renaming file:", error.message);
+    status_str="Error renaming file:"+error.message;
+	let statusnow=Date().toString().substr(0,24)+', '+status_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+    console.error(statusnow);
+  }
+}
+
+async function deleteGitHubFile(owner,repo,filePath,branch,token) {
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+  try {
+    const deleteResponse = await fetch(apiUrl, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: 'Delete file', // Commit message
+      }),
+    });
+
+	status_str='';
+    if (!deleteResponse.ok) {
+		status_str=`Failed to delete file: ${deleteResponse.statusText}`;
+    } else {
+		status_str=`File ${filePath} deleted successfully.`;
+	}
+	let statusnow=Date().toString().substr(0,24)+', '+status_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+	console.log(status_str);
+  } catch (error) {
+	status_str='Error:'+error.message
+	let statusnow=Date().toString().substr(0,24)+', '+status_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+    console.error(status_str);
+  }
+}
+
+async function uploadFile(owner,repo,filePath,branch,token) {
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+  // Convert content to base64
+  const base64Content = btoa(content);
+
+  try {
+    // Step 1: Check if the file exists to get its SHA (for updates)
+    let sha = null;
+    try {
+      const getResponse = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (getResponse.ok) {
+        const fileData = await getResponse.json();
+        sha = fileData.sha; // File exists, get its SHA
+      }
+      // If file doesn't exist (404), SHA remains null for new file creation
+    } catch (error) {
+      if (error.message.includes('404')) {
+        console.log('File does not exist, will create a new file.');
+      } else {
+        throw error;
+      }
+    }
+
+    // Step 2: Create or update the file
+    const payload = {
+      message: `Add or update ${filePath} via API`, // Commit message
+      content: base64Content, // Base64-encoded content
+	  branch: branch,
+    };
+    if (sha) {
+      payload.sha = sha; // Include SHA for updating existing file
+    }
+
+    const putResponse = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!putResponse.ok) {
+      throw new Error(`Failed to upload file: ${putResponse.statusText}`);
+    }
+
+    console.log(`File ${path} uploaded successfully.`);
+  } catch (error) {
+    console.error('Error:', error.message);
   }
 }
 
