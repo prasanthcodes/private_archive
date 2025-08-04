@@ -663,7 +663,9 @@ table.addEventListener('click', async (event) => {
 		const cellContent = cell.textContent;
 		output.textContent = JSON.stringify({ rowId, columnIndex, cellContent }, null, 2);
 		filepath = row.getAttribute('data-path');
+		if ([2,5,6].includes(columnIndex)){
 		current_path=filepath
+		}
 		filetype = row.getAttribute('data-type');
 		console.log('current_path frm table:',current_path);
 		await Table1_Functions(filepath, filetype, rowId,  columnIndex,'')
@@ -1316,8 +1318,9 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
     );
     const fileData = await response.json();
 
+	if (response.ok){
     // Step 2: Create file with new name
-    await fetch(
+    const response2 = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/contents/${newPath}`,
       {
         method: "PUT",
@@ -1333,9 +1336,11 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
         }),
       }
     );
-
+	
+	const response2j = await response2.json();
+	if (response2j.ok){
     // Step 3: Delete old file
-    await fetch(
+    const response3 = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/contents/${oldPath}`,
       {
         method: "DELETE",
@@ -1350,11 +1355,26 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
         }),
       }
     );
+	const response3j = await response3.json();
+	if (response3j.ok){
+		status_str=`File renamed from ${oldPath} to ${newPath}`;
+		let statusnow=Date().toString().substr(0,24)+', '+status_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
+	} else {
+		span_status.innerHTML=Date().toString().substr(0,24)+', '+response3j.message;
+		statuspage_html+=response3j.message+'<br>';
+	}
+	} else {
+		span_status.innerHTML=Date().toString().substr(0,24)+', '+response2j.message;
+		statuspage_html+=response2j.message+'<br>';
+	}
+	
+	} else {
+		span_status.innerHTML=Date().toString().substr(0,24)+', '+response.message;
+		statuspage_html+=response.message+'<br>';
+	}
 
-    status_str=`File renamed from ${oldPath} to ${newPath}`;
-	let statusnow=Date().toString().substr(0,24)+', '+status_str;
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
   } catch (error) {
     status_str="Error renaming file:"+error.message;
 	let statusnow=Date().toString().substr(0,24)+', '+status_str;
