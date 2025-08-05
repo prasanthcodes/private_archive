@@ -94,8 +94,6 @@ CurrentPath: <span id="curpath_status">txtdata</span>
 
 </div>
 
-<div id="output">Click a cell to see the row ID, column, and cell content</div>
-
 
 <!--script src="github_issues_list.js"></script-->
 
@@ -197,6 +195,7 @@ var folder_selected_flag=false;
 var selected_files_mvcp=[];
 var move_or_copy=0;
 var foldersrc=[];
+var text_extensions=['txt','csv','htm','html','css','js','sh','py','java','c','cpp','go','r','php','rb','cs','ts','json','yml','md','toml','ini','xml','cfg','rst','tsv','log','sql','bash'];
 var image_extensions=['jpg','jpeg','png','gif','bmp','webp','svg','tiff','tif','ico'];
 var filename2_last='';
 var jdata='';
@@ -289,62 +288,33 @@ await createFileInGitHub(owner,repo,filePath,branch,token).catch(console.error);
 await delayExecution(1000);//1 sec
 await open_function_1(current_path);
 
-} else if (this.id=='uploadf_b'){
+} else if (this.id=='uploadf_a'){
 var uploadbrowse=document.getElementById('fileuploadid1');
-let pwout=get_spassword();
-if (pwout[0]){
 if(uploadbrowse.files.length>0){
-content={'operation': 'upload','folderroot':folderroot,'name_in':'new.txt'};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-// Append files to files array
 for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
   let file = uploadbrowse.files[fno];
-  let filename2=file.name;
-  let ext=filename2.split('.').pop().toLowerCase();
-// crypt mode
-if (PrivateMode_flag){
-let pwout2=await get_CMode_password();
-if (pwout2[0]){
-let key=pwout2[1];
-var key_clone1=get_keyclone(key);
-//---prepare crypt file-----
-let filename2_b64=await filename2encbase64name(filename2,key);
-let data2sav=await run_all_op(filename2,file,ext,key_clone1);
-var file_2 = new File([data2sav], filename2_b64,{type: 'application/octet-stream'});
-formdata1.append('files[]', file_2);
-//---prepare crypt image icon file-----
-if (image_extensions.includes(ext)){
-var outname=filename2_b64.slice(0,-6)+'ic.raw';
-var file_jpg_comp=await compress_imgfile_1(file,outname);
-let data2sav2=await run_all_op(filename2,file_jpg_comp,'jpg',key_clone1);
-var file_3 = new File([data2sav2], outname,{type: 'application/octet-stream'});
-formdata1.append('files[]', file_3);
-}
-
-} else {span_status.innerHTML='cmode password incorrect';}
-} else {
-  formdata1.append('files[]', file);
+  let fileName=file.name;
+  //let ext=filename2.split('.').pop().toLowerCase();
+  if (file) {
+    const reader = new FileReader();
+    
+    // When the file is read, this function is triggered
+    reader.onload = async (e) => {
+	  //let fileName=e.name;
+	  let filePath=current_path+'/'+fileName
+      const base64String = e.target.result; // Full data URL (e.g., "data:image/png;base64,...")
+      // To get only the Base64 part, remove the data URL prefix
+      const base64Content = base64String.split(',')[1];
+	  await uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content);
+    };
+    
+    // Read the file as a Data URL (which includes Base64 encoding)
+    reader.readAsDataURL(file);
+  }
 }
 }
-
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{ 
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-} else {span_status.innerHTML='no files to upload';}
-}
-
+await delayExecution(1000);//1 sec
+await open_function_1(current_path);
 } else if (this.id=='delete_a'){
 getselectedfiles();
 if (folder_selected_flag){
@@ -353,15 +323,18 @@ span_status.innerHTML=Date().toString().substr(0,24)+', '+'folders are not delet
 if (selected_files.length<1){
 span_status.innerHTML=Date().toString().substr(0,24)+', '+'no files selected.';
 } else {
-for (let i=0;i<selected_files.length.length;i++) {
+for (let i=0;i<selected_files.length;i++) {
 await deleteGitHubFile(owner,repo,selected_files[i],branch,token);
+await delayExecution(1000);//1 sec
+await open_function_1(current_path);
+statuspage_html+=Date().toString().substr(0,24)+', file: '+selected_files[i]+' deleted.'+'<br>';
 }
 span_status.innerHTML=Date().toString().substr(0,24)+', '+'deleting operation finished.';
 statuspage_html+=Date().toString().substr(0,24)+', '+'deleting operation finished.'+'<br>';
 }
 }
-} else if (this.id=='move_b'){
-span_status.innerHTML='move operation not working.';
+} else if (this.id=='move_a'){
+span_status.innerHTML='move operation not implemened.';
 
 } else if (this.id=='copy_b'){
 getselectedfiles();
@@ -378,34 +351,6 @@ span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select d
 }
 
 } else if (this.id=='paste_b'){
-if (selected_files_mvcp.length<1){
-span_status.innerHTML='no files selected.';
-} else {
-let pwout=get_spassword();
-if (pwout[0]){
-if (move_or_copy==1){
-content={'operation': 'move','folderroot':foldersrc,'folderdestination':folderroot,'selected':selected_files_mvcp};
-} else if (move_or_copy==2){
-content={'operation': 'copy','folderroot':foldersrc,'folderdestination':folderroot,'selected':selected_files_mvcp};
-}
-data=JSON.stringify(content);
-formdata1.append('data', data);
-formdata1.append('spassword', pwout[1]);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let datestr=Date().toString().substr(0,24);
-	let statusnow=datestr+', '+ContentRetrieved['statusstr'];
-	if (ContentRetrieved['statusstr'][0]=='['){
-	let aray1=ContentRetrieved['statusstr'].split(',');
-	statusnow=datestr+' '+aray1[0].substring(1);
-	}
-	span_status.innerHTML=statusnow;
-	statuspage_html+=datestr+', '+ContentRetrieved['statusstr']+'<br>';
-	get_filespage(folderroot);
-	});
-}
-}
 
 }
 }
@@ -419,13 +364,13 @@ await ChangePageMode();
 if ((columnIndex==2)&(filetype=='folder')){
 await open_function_1(filepath);
 }
-
+/*
 if ((columnIndex==8)&(filetype=='file')){
 await deleteGitHubFile(owner,repo,filePath,branch,token);
 await delayExecution(1000);//1 sec
 await open_function_1(current_path);
 }
-
+*/
 if ((columnIndex==7)&(filetype=='file')){
 let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
 let oldname=filepath.split(/(\\|\/)/g).pop()
@@ -436,6 +381,11 @@ await renameGitHubFile(owner,repo,filepath,newPath,branch,token);
 await delayExecution(1000);//1 sec
 await open_function_1(current_path);
 }
+}
+
+if ((columnIndex==8)&(filetype=='file')){
+await download_function(filepath);
+await ChangePageMode();
 }
 }
 
@@ -582,7 +532,8 @@ await ChangePageMode();
 async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
-console.log('jdata',jdata)
+await delayExecution(1000);//1 sec
+//console.log('jdata',jdata)
 filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
 N_folders=0;
 for (let i=0;i<jdata.length;i++) {
@@ -652,7 +603,6 @@ console.log('cbox1 not present error.');
 }
 
 const table = document.getElementById('table1');
-const output = document.getElementById('output');
 table.addEventListener('click', async (event) => {
 	const cell = event.target.closest('td');
 	if (cell) {
@@ -661,7 +611,6 @@ table.addEventListener('click', async (event) => {
 		const columnIndex = Array.from(row.children).indexOf(cell);
 		//const column = headers[columnIndex];
 		const cellContent = cell.textContent;
-		output.textContent = JSON.stringify({ rowId, columnIndex, cellContent }, null, 2);
 		filepath = row.getAttribute('data-path');
 		if ([2,5,6].includes(columnIndex)){
 		current_path=filepath
@@ -762,7 +711,6 @@ await get_filespage(folderroot);
 }
 
 async function view_function(filepath){
-let text_extensions=['txt','csv','htm','html','css','js','sh','py','java','c','cpp','go','r','php','rb','cs','ts','json','yml','md','toml','ini','xml','cfg','rst','tsv','log','sql','bash'];
 let filename=filepath.split('\\').pop().split('/').pop();;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(image_extensions.includes(ext) || text_extensions.includes(ext))){
@@ -770,15 +718,14 @@ let datestr=Date().toString().substr(0,24);
 span_status.innerHTML=datestr+', file format not viewable.';
 } else {
 
-var ResOut = await getGitHubFile(owner, repo, filepath, token = '')
-
+var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token = '');
 mimeType = getMimeType(ext);
-var filedata = ResOut.content;
+var binaryString = atob(ResOut.content);
 let statusnow=Date().toString().substr(0,24)+' file retrieved.';
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
 if (text_extensions.includes(ext)){
-text_ct=filedata;
+text_ct=binaryString;
 /*
 if (ext=='htm' || ext=='html'){
 	text_ct=formatHTML(text_ct);
@@ -795,10 +742,10 @@ text_ct='<button type="button" class="buttonhighlight_1" id="highlight_p" onclic
 
 filespage_html=text_ct;
 path_status.innerHTML=filepath;
-}else if(image_extensions.includes(ext)){
-filespage_html="<img src='data:"+mimeType+";base64,"+ContentRetrieved['data'][2]+"'>";
+} else if (image_extensions.includes(ext)) {
+filespage_html="<img src='data:"+mimeType+";base64,"+ResOut.content+"'>";
 path_status.innerHTML=filepath;
-}else{
+} else {
 //filespage_html='file not displayed.';
 span_status.innerHTML=datestr+', file format not viewable.';
 }
@@ -872,167 +819,25 @@ fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
 .catch(error => {filespage_html='error occured when updating.';ChangePageMode();console.log(error);});
 }
 
-async function rename_function(){
-let id=this.id;
-let name_in='';
-let oldname='';
-let new_id='';
-let fname='';
-if(id[0]=='a'){
-folderroot.push(parseInt(id.substr(3,) , 10));
 
-if (PrivateMode_flag){
-oldname=document.getElementById('a0_'+id.substr(3,)).textContent;
-} else {
-oldname=document.getElementById('a3_'+id.substr(3,)).textContent;
-}
-name_in = prompt("enter a new folder name:", oldname);
-content={'operation': 'rename','folderroot':folderroot.slice(),'mode':'folder','name_in':name_in};
-folderroot.pop();
-}
-if(id[0]=='b'){
-new_id=parseInt(id.substr(3,) , 10);
-if (PrivateMode_flag){
-let pwout2=await get_CMode_password();
-if (pwout2[0]){
-let key=pwout2[1];
-oldname=document.getElementById('c0_'+id.substr(3,)).textContent;
-let namenew = prompt("enter a new filename:", oldname);
-name_in=await filename2encbase64name(namenew,key);
-let N_folders=jdata[1].length;
-if (new_id>N_folders){
-fname=jdata[2][new_id-N_folders];
-}
-}
-} else {
-oldname=document.getElementById('b0_'+id.substr(3,)).textContent;
-name_in = prompt("enter a new filename:", oldname);
-}
-folderroot.push(new_id);
-content={'operation': 'rename','folderroot':folderroot.slice(),'mode':'file','name_in':name_in};
-folderroot.pop();
-}
-
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-await fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let statusnow=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	if (ContentRetrieved['status']=='ok'){
-	get_filespage(folderroot);
-	ChangePageMode();
-	
-if(PrivateMode_flag){
-if (fname.slice(-7)=='_im.raw'){
-let ico_name=fname.slice(0,-7)+'_ic.raw';
-let idx=jdata[2].indexOf(ico_name);
-let name_in2=name_in.slice(0,-7)+'_ic.raw';
-folderroot.push(idx);
-content={'operation': 'rename','folderroot':folderroot.slice(),'mode':'file','name_in':name_in2};
-folderroot.pop();
-data=JSON.stringify(content);
-var formdata1_1 = new FormData();
-formdata1_1.append('username1', username1);
-formdata1_1.append('password1', password1);
-formdata1_1.append('id', lgid);
-formdata1_1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1_1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{
-	let statusnow=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	if (ContentRetrieved['status']=='ok'){
-	get_filespage(folderroot);
-	ChangePageMode();
-	}
-	})
-.catch(error => {console.log(error);});
-
-}
-
-}
-	}
-	})
-.catch(error => {console.log(error);});
-}
-
-async function download_function(){
-let id=this.id;
-if(id[0]=='b'){
-//folderroot=[];
-var pwout=[];
-if (PrivateMode_flag){
-let id_name='c1' + id.substring(2,);
-let filename=document.getElementById(id_name).innerText;
+async function download_function(filepath){
+let filename=filepath.split('\\').pop().split('/').pop();;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
-if (ext!='raw'){
-span_status.innerHTML='cant download this file type in CMode';
-return;
-} else {
-pwout=await get_CMode_password();
-if (pwout[0]==false){
-span_status.innerHTML='cmode password incorrect';
-return;
+var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token = '');
+mimeType = getMimeType(ext);
+var binaryString = atob(ResOut.content);
+const len = binaryString.length;
+const bytes = new Uint8Array(len);
+for (let i = 0; i < len; i++) {
+  bytes[i] = binaryString.charCodeAt(i);
 }
-}
-} else {
-let id_name=id.substring(0, 1) + '0' + id.substring(2,);
-let filename=document.getElementById(id_name).innerText;
-let ext=filename.split('.').slice(-1)[0].toLowerCase();
-}
+//var filedata = btoa(ResOut.content);
+const blob = new Blob([bytes],{ type: mimeType });
+var a = document.createElement("a");
+a.href = window.URL.createObjectURL(blob);
+a.download = filename;
+a.click();
 
-folderroot.push(parseInt(id.substr(3,) , 10));
-content={'operation': 'download','folderroot':folderroot.slice()};
-folderroot.pop();
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(res => {
-var splited=res.headers.get("content-disposition").split('=');
-down_filename = '';
-for (let j=1;j<splited.length;j++){down_filename=down_filename+splited[j]+'='}
-down_filename=down_filename.slice(0,-1);
-return res.blob();
-})
-.then(data => {
-if (PrivateMode_flag){
-let key=pwout[1];
-var key_clone1=get_keyclone(key);
-let filename2_b64=down_filename;
-let filename2_promise=encbase64name2filename(filename2_b64,key);
-filename2_promise.then(filename2=>{
-let data2sav_promise= run_all_op2('',data,'',key_clone1);
-data2sav_promise.then(data2sav=>{
-  var file_2 = new Blob([data2sav[0].buffer], {type: 'octet/stream'});
-  var a = document.createElement("a");
-  a.href = window.URL.createObjectURL(file_2);
-  a.download = filename2;
-  a.click();
-}).catch(error => {console.log(error);}); 
-}).catch(error => {console.log(error);}); 
-
-} else {
-  var a = document.createElement("a");
-  a.href = window.URL.createObjectURL(data);
-  a.download = down_filename;
-  a.click();
-  }
-})
-.catch(error => {console.log(error);}); 
-}
 }
 
 
@@ -1162,7 +967,7 @@ console.log('in',path);
         //await listRepoContents(owner, repo, item.path, token);
       }
     }
-	jdata=data_1.concat(data_2)
+	jdata=data_1.concat(data_2);
 	return jdata;
   } catch (error) {
 	let error_str='Error fetching repository contents:'+ error.message;
@@ -1173,10 +978,10 @@ console.log('in',path);
 }
 
 // Function to fetch a file from GitHub
-async function getGitHubFile(owner, repo, path, token = '') {
+async function getGitHubFileContent(owner, repo, path, branch, token = '') {
     try {
         // Construct the API URL
-        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
         
         // Set up headers
         const headers = {
@@ -1205,12 +1010,13 @@ async function getGitHubFile(owner, repo, path, token = '') {
         const data = await response.json();
         // Decode the base64 content
         if (data.content) {
-            const decodedContent = atob(data.content.replace(/\n/g, ''));
+			let FileContent=data.content.replace(/\n/g, '');//base64 data
             return {
-                content: decodedContent,
+                content: FileContent,
                 name: data.name,
                 path: data.path,
                 url: data.html_url,
+				sha: data.sha,
             };
         } else {
 			let error_str='No content found in the response';
@@ -1219,6 +1025,58 @@ async function getGitHubFile(owner, repo, path, token = '') {
 			statuspage_html+=statusnow+'<br>';
             throw new Error(error_str);
         }
+    } catch (error) {
+		let error_str='Error fetching file:'+error
+		let statusnow=Date().toString().substr(0,24)+', '+error_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
+        throw error;
+    }
+}
+
+async function getGitHubFile(owner, repo, path, branch, token = '') {
+    try {
+        // Construct the API URL
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+        
+        // Set up headers
+        const headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'GitHub-File-Fetcher'
+        };
+        
+        // Add authorization header if token is provided
+        if (token) {
+            headers['Authorization'] = `token ${token}`;
+        }
+        
+        // Make the API request
+        const response = await fetch(apiUrl, { headers });
+        
+        // Check if the request was successful
+        if (!response.ok) {
+			let error_str=`HTTP error! status: ${response.status}`;
+			let statusnow=Date().toString().substr(0,24)+', '+error_str;
+			span_status.innerHTML=statusnow;
+			statuspage_html+=statusnow+'<br>';
+            throw new Error(error_str);
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        // Decode the base64 content
+		decodedContent=''
+        if (data.content) {
+            decodedContent = atob(data.content.replace(/\n/g, ''));
+		}
+		return {
+			content: decodedContent,
+			name: data.name,
+			path: data.path,
+			url: data.html_url,
+			sha: data.sha,
+		};
+
     } catch (error) {
 		let error_str='Error fetching file:'+error
 		let statusnow=Date().toString().substr(0,24)+', '+error_str;
@@ -1386,8 +1244,8 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
 
 async function deleteGitHubFile(owner,repo,filePath,branch,token) {
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-
   try {
+	var ResOut = await getGitHubFile(owner, repo, filepath, branch);
     const deleteResponse = await fetch(apiUrl, {
       method: 'DELETE',
       headers: {
@@ -1397,12 +1255,14 @@ async function deleteGitHubFile(owner,repo,filePath,branch,token) {
       },
       body: JSON.stringify({
         message: 'Delete file', // Commit message
+		sha: ResOut.sha,
       }),
     });
 
+	const response = await deleteResponse.json();
 	status_str='';
     if (!deleteResponse.ok) {
-		status_str=`Failed to delete file: ${deleteResponse.statusText}`;
+		status_str=`Failed to delete file: ${deleteResponse.message}`;
     } else {
 		status_str=`File ${filePath} deleted successfully.`;
 	}
@@ -1410,7 +1270,7 @@ async function deleteGitHubFile(owner,repo,filePath,branch,token) {
 	span_status.innerHTML=statusnow;
 	statuspage_html+=statusnow+'<br>';
 	console.log(status_str);
-  } catch (error) {
+  } catch(error) {
 	status_str='Error:'+error.message
 	let statusnow=Date().toString().substr(0,24)+', '+status_str;
 	span_status.innerHTML=statusnow;
@@ -1419,13 +1279,13 @@ async function deleteGitHubFile(owner,repo,filePath,branch,token) {
   }
 }
 
-async function uploadFile(owner,repo,filePath,branch,token) {
+async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content) {
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
   // Convert content to base64
-  const base64Content = btoa(content);
+  //const base64Content = btoa(content);
 
-  try {
+  if(1) {
     // Step 1: Check if the file exists to get its SHA (for updates)
     let sha = null;
     try {
@@ -1446,14 +1306,22 @@ async function uploadFile(owner,repo,filePath,branch,token) {
     } catch (error) {
       if (error.message.includes('404')) {
         console.log('File does not exist, will create a new file.');
+		status_str='File does not already exist, will upload the new file.'
+		let statusnow=Date().toString().substr(0,24)+', '+status_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
       } else {
+		status_str='Error:'+error.message
+		let statusnow=Date().toString().substr(0,24)+', '+status_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
         throw error;
       }
     }
 
     // Step 2: Create or update the file
     const payload = {
-      message: `Add or update ${filePath} via API`, // Commit message
+      message: `uploading ${filePath}`, // Commit message
       content: base64Content, // Base64-encoded content
 	  branch: branch,
     };
@@ -1472,12 +1340,24 @@ async function uploadFile(owner,repo,filePath,branch,token) {
     });
 
     if (!putResponse.ok) {
-      throw new Error(`Failed to upload file: ${putResponse.statusText}`);
+		status_str=`Failed to upload file: ${putResponse.statusText}`
+		let statusnow=Date().toString().substr(0,24)+', '+status_str;
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
+      throw new Error(status_str);
     }
 
-    console.log(`File ${path} uploaded successfully.`);
-  } catch (error) {
-    console.error('Error:', error.message);
+	status_str=`File ${filePath} uploaded successfully.`;
+	let statusnow=Date().toString().substr(0,24)+', '+status_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+	console.log(status_str)
+  } else {
+	status_str='Error:'+ error.message;
+	let statusnow=Date().toString().substr(0,24)+', '+status_str;
+	span_status.innerHTML=statusnow;
+	statuspage_html+=statusnow+'<br>';
+	console.error(status_str)
   }
 }
 
