@@ -205,9 +205,9 @@ document.getElementById('div_login').style.display = 'none';
 document.getElementById('topgroup_1').style.display = 'block';
 
 await ChangePageMode();
-
+password_comb=username1+password1;
 //crypt_example();
-token=sjcl.decrypt(username1+password1, encdata_1);
+token=sjcl.decrypt(password_comb, encdata_1);
 //token='';
 }
 }
@@ -228,6 +228,7 @@ var current_path='';
 var current_path_store=[starting_path_1,starting_path_2];//[public,private]
 var username1='';
 var password1='';
+var password_comb='';
 var lgid=0;
 var PrivateMode_flag=false;
 var PageModeFlag=1;
@@ -315,6 +316,28 @@ styleSheet.textContent = styles_2;
 document.head.appendChild(styleSheet);
 }
 
+function encode_filename(fname){
+if (PageModeFlag==2) {
+let jsonString=sjcl.encrypt(password_comb,fname, sjcl_options);
+let jsonObject = JSON.parse(jsonString);
+name=jsonObject.ct;
+name=name.replace("/", "_");
+return name;
+} else {
+return fname;
+}
+}
+
+function decode_filename(fname){
+if (PageModeFlag==2) {
+fname=fname.replace("_", "/");
+let name=sjcl.decrypt(password_comb,fname, sjcl_options);
+return name;
+} else {
+return fname;
+}
+}
+
 
 async function ButtonGroup1_Functions(){
 var formdata1 = new FormData();
@@ -324,6 +347,8 @@ formdata1.append('id', lgid);
 
 if (this.id=='createfo_a'){
 let folderName = prompt("enter folder name:", "new");
+if (folderName==''){throw new Error('empty folderName');}
+folderName=encode_filename(folderName);
 let filePath=current_path+'/'+folderName
 await createFolderInGitHub(owner,repo,filePath,branch,token).catch(console.error);
 await delayExecution(1000);//1 sec
@@ -331,6 +356,8 @@ await open_function_1(current_path);
 
 } else if (this.id=='createfi_a'){
 let fileName = prompt("enter file name:", "new.txt");
+if (fileName==''){throw new Error('empty fileName');}
+fileName=encode_filename(fileName);
 let filePath=current_path+'/'+fileName
 await createFileInGitHub(owner,repo,filePath,branch,token).catch(console.error);
 await delayExecution(1000);//1 sec
@@ -386,18 +413,15 @@ span_status.innerHTML='move operation not implemened.';
 
 } else if (this.id=='copy_b'){
 getselectedfiles();
-selected_files_mvcp=selected_files.slice();
+if (folder_selected_flag){
+span_status.innerHTML=Date().toString().substr(0,24)+', '+'folders are not movable.';
+} else {
 if (selected_files_mvcp.length<1){
 span_status.innerHTML='no files selected.';
 } else {
-move_or_copy=2;
-foldersrc=folderroot.slice();
-if(PrivateMode_flag){
-selected_files_mvcp=get_ico_indices(selected_files_mvcp);
-}
 span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select destination directory and click paste button.';
 }
-
+}
 } else if (this.id=='paste_b'){
 
 }
@@ -578,12 +602,25 @@ async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
 await delayExecution(1000);//1 sec
+let filenames_all=[];
+if (PageModeFlag==1){
+for (let i=0;i<jdata.length;i++) {
+filenames_all[i]=jdata[i][0].split('\\').pop().split('/').pop();
+}
+} else if (PageModeFlag==2) {
+for (let i=0;i<jdata.length;i++) {
+let en_name=en_name.split('\\').pop().split('/').pop();
+en_name=jdata[i][0].replace("_", "/");
+let name=sjcl.decrypt(password_comb,en_name, sjcl_options);
+filenames_all[i]=name;
+}
+}
 //console.log('jdata',jdata)
 filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
 N_folders=0;
 for (let i=0;i<jdata.length;i++) {
 	if (jdata[i][1]=='folder'){
-	let name=jdata[i][0].split('\\').pop().split('/').pop();
+	let name=filenames_all[i];
 	let size=formatBytes(jdata[i][2]);
 	let mdate=jdata[i][3];
 	filespage_html+='<tr data-id="'+i+'" data-type="folder" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
@@ -595,7 +632,7 @@ for (let i=0;i<jdata.length;i++) {
 }
 for (let i=0;i<jdata.length;i++) {
 	if (jdata[i][1]=='file'){
-	let name=jdata[i][0].split('\\').pop().split('/').pop();
+	let name=filenames_all[i];
 	let size=formatBytes(jdata[i][2]);
 	let mdate=jdata[i][3];
 	filespage_html+='<tr data-id="'+i+'" data-type="file" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
@@ -695,6 +732,7 @@ for (var i = 0; i < checkboxes.length; i++) {
 	const datatype = tr.getAttribute('data-type');
 	selected_files.push(dataPath);
 	selected_files_type.push(datatype);
+	selected_files_mvcp.push(dataPath);
 	if (datatype=='folder'){folder_selected_flag=true}
 }
 }
@@ -792,9 +830,13 @@ path_status.innerHTML=filepath;
 }
 
 async function update_function(){
+if (did_loggedin){
 let upcontent=document.getElementById('content1').value;
 let base64Content = btoa(upcontent);
 await uploadFileToGitHub(owner,repo,current_path,branch,token,base64Content);
+} else {
+span_status.innerHTML=Date().toString().substr(0,24)+', '+'log in to update the file.';
+}
 }
 
 async function download_function(filepath){
@@ -892,7 +934,7 @@ function formatBytes(bytes, decimals = 2) {
 
 function crypt_example(){
 const message = `"Hello, secure world!"`;
-const pwd = username1+password1;//"1234567890";
+const pwd = password_comb;
 //const bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 var encrypted = sjcl.encrypt(pwd, message);
 //var jsObject = JSON.parse(encrypted);
