@@ -170,8 +170,17 @@ token=sjcl.decrypt(username1+password1, encdata_1);
 
 document.getElementById("submit_btn").addEventListener("click", call_submit);
 
-var current_path='';
 
+var owner = 'prasanthcodes';//google
+var repo = 'private_archive';//mobly
+var branch = 'main';
+var token = '';
+var starting_path_1='public_files';
+var starting_path_2='private_files';
+
+
+var current_path='';
+var current_path_store=[starting_path_1,starting_path_2];//[public,private]
 var username1='';
 var password1='';
 var lgid=0;
@@ -187,6 +196,7 @@ var path_status = document.getElementById('curpath_status');
 var filespage_html='';
 var statuspage_html='';
 var cryptpage_html='';
+var privatepage_html='';
 var servepage_html='';
 var down_filename='';
 var selected_files=[];
@@ -197,18 +207,11 @@ var move_or_copy=0;
 var foldersrc=[];
 var text_extensions=['txt','csv','htm','html','css','js','sh','py','java','c','cpp','go','r','php','rb','cs','ts','json','yml','md','toml','ini','xml','cfg','rst','tsv','log','sql','bash'];
 var image_extensions=['jpg','jpeg','png','gif','bmp','webp','svg','tiff','tif','ico'];
+var editable_formats=['txt','csv','htm','html','css','js','py','json','yml','md','toml','ini','tsv'];
 var filename2_last='';
 var jdata='';
 var filepath='';
 var filetype='';
-
-// Example usage
-var owner = 'prasanthcodes';//google
-var repo = 'private_archive';//mobly
-var branch = 'main';
-var token = '';
-var starting_path_1='public_files';
-var starting_path_2='private_files';
 
 
 document.getElementById('publicpage_a').addEventListener('click', set_pageflag, false);
@@ -364,13 +367,11 @@ await ChangePageMode();
 if ((columnIndex==2)&(filetype=='folder')){
 await open_function_1(filepath);
 }
-/*
-if ((columnIndex==8)&(filetype=='file')){
-await deleteGitHubFile(owner,repo,filePath,branch,token);
-await delayExecution(1000);//1 sec
-await open_function_1(current_path);
+
+if ((columnIndex==6)&(filetype=='file')){
+await edit_function(filepath);
 }
-*/
+
 if ((columnIndex==7)&(filetype=='file')){
 let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
 let oldname=filepath.split(/(\\|\/)/g).pop()
@@ -385,7 +386,6 @@ await open_function_1(current_path);
 
 if ((columnIndex==8)&(filetype=='file')){
 await download_function(filepath);
-await ChangePageMode();
 }
 }
 
@@ -564,6 +564,7 @@ for (let i=0;i<jdata.length;i++) {
 filespage_html+='</table><br>';
 
 current_path=path;
+store_current_path();
 path_status.innerHTML=path;
 statuspage_html+=Date().toString().substr(0,24)+' page loaded. path: '+path+'<br>'; 
 await ChangePageMode();
@@ -573,11 +574,13 @@ async function ChangePageMode(){
 document.body.style.backgroundColor = "";
 
 if (PageModeFlag==1){
+current_path=current_path_store[0];
 viewcontent1.innerHTML=filespage_html;
 span_currentpage.innerHTML='CurrentPage: PublicPage';
 document.body.style.backgroundColor = "#fff2e6";
 } else if (PageModeFlag==2) {
-viewcontent1.innerHTML=filespage_html;
+current_path=current_path_store[1];
+viewcontent1.innerHTML=privatepage_html;
 span_currentpage.innerHTML='CurrentPage: PrivatePage';
 document.body.style.backgroundColor = "#ffe6ff";
 } else if (PageModeFlag==3) {
@@ -613,45 +616,14 @@ table.addEventListener('click', async (event) => {
 		const cellContent = cell.textContent;
 		filepath = row.getAttribute('data-path');
 		if ([2,5,6].includes(columnIndex)){
-		current_path=filepath
+			current_path=filepath
+			store_current_path();
 		}
 		filetype = row.getAttribute('data-type');
-		console.log('current_path frm table:',current_path);
-		await Table1_Functions(filepath, filetype, rowId,  columnIndex,'')
+		await Table1_Functions(filepath, filetype, rowId,  columnIndex,'');
 	}
 });
 }
-}
-
-function changepage2(){
-document.body.style.backgroundColor = "#ffd";
-viewcontent1.innerHTML=statuspage_html;
-span_currentpage.innerHTML='CurrentPage: StatusPage';
-}
-
-async function changepage3(){
-document.body.style.backgroundColor = "#eef";
-
-if (!PrivateMode_flag){
-viewcontent1.innerHTML=filespage_html;
-span_currentpage.innerHTML='CurrentPage: ServePage';
-
-var elements = document.getElementsByClassName('act0_1');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', serve_function, false);
-}
-}
-
-selected_files=[];
-var elements = document.getElementsByClassName('act0');
-for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', open_function, false);
-}
-
-//var elements = document.getElementsByClassName('act2');
-//for (var i = 0; i < elements.length; i++) {
-//    elements[i].addEventListener('click', edit_function, false);
-//}
 }
 
 function serve_function(){
@@ -664,7 +636,6 @@ let url_of_file=window.location.protocol+ '//'+ window.location.hostname +'/'+ j
 window.location.href=url_of_file;
 }
 }
-
 
 function getselectedfiles(){
 let checkboxes = document.querySelectorAll('input[name="list_c"]:checked');
@@ -752,73 +723,32 @@ span_status.innerHTML=datestr+', file format not viewable.';
 }
 }
 
-function edit_function(){
-let id=this.id;
-if(id[0]=='b'){
-let editable_formats=['txt','csv','htm','html','css','js'];
-let id_name=id.substring(0, 1) + '0' + id.substring(2,);
-let filename=document.getElementById(id_name).innerText;
-let ext=filename.split('.').slice(-1)[0].toLowerCase();
+async function edit_function(filePath){
+let ext=filePath.split('.').slice(-1)[0].toLowerCase();
 if (!(editable_formats.includes(ext))){
 let datestr=Date().toString().substr(0,24);
 span_status.innerHTML=datestr+', file format not editable.';
 } else {
-folderroot.push(parseInt(id.substr(3,) , 10));
-content={'operation': 'edit','folderroot':folderroot.slice()};
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{ 
-	let statusnow=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	if (ContentRetrieved['status']=='ok'){
-	filespage_html="<label for='content'>content:</label><br><textarea id='content1' name='content1' rows='35' cols='100'></textarea><br><button id='edit_submit' onclick='update_function'>Submit</button>";
-	ChangePageMode();
-	document.getElementById('edit_submit').addEventListener('click', update_function, false);
-	document.getElementById('content1').value=ContentRetrieved['data'][2];
-	} else {
-	filespage_html="file not retrieved.";
-	ChangePageMode();
-	}
-	})
-.catch(error => {filespage_html="an error occured when retrieving.";ChangePageMode();console.log(error);});
+
+let fileData=await getGitHubFile(owner, repo, filePath, branch, token);
+if (fileData){
+filespage_html="<label for='content'>content:</label><br><textarea id='content1' name='content1' rows='35' cols='100'></textarea><br><button id='edit_submit' onclick='update_function'>Submit</button>";
+ChangePageMode();
+document.getElementById('edit_submit').addEventListener('click', update_function, false);
+document.getElementById('content1').value=fileData.content;
+} else {
+filespage_html="file not retrieved.";
+ChangePageMode();
 }
+path_status.innerHTML=filepath;
 }
 }
 
-function update_function(){
-//folderroot=[];
-//folderroot.push(parseInt(id.substr(3,) , 10));
+async function update_function(){
 let upcontent=document.getElementById('content1').value;
-let content={'operation': 'update','folderroot':folderroot.slice(),'content':upcontent};
-data=JSON.stringify(content);
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(ContentRetrieved=>{ 
-	let statusnow=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr'];
-	span_status.innerHTML=statusnow;
-	statuspage_html+=statusnow+'<br>';
-	if (ContentRetrieved['status']=='ok'){
-	filespage_html='content updated.';
-	ChangePageMode();
-	} else {
-	filespage_html='content not updated.';ChangePageMode();
-	}
-	})
-.catch(error => {filespage_html='error occured when updating.';ChangePageMode();console.log(error);});
+let base64Content = btoa(upcontent);
+await uploadFileToGitHub(owner,repo,current_path,branch,token,base64Content);
 }
-
 
 async function download_function(filepath){
 let filename=filepath.split('\\').pop().split('/').pop();;
@@ -877,10 +807,15 @@ current_path=starting_path_1;
 current_path=starting_path_2;
 }
 }
+store_current_path();
 await open_function_1(current_path);
 }, false);
 
-document.getElementById('home_a').addEventListener('click', async function(){current_path='';await open_function_1(current_path);}, false);
+document.getElementById('home_a').addEventListener('click', async function(){
+current_path='';
+store_current_path();
+await open_function_1(current_path);
+}, false);
 
 document.getElementById('logout_a').addEventListener('click', function(){
 did_loggedin=false;
@@ -891,7 +826,6 @@ password1='';
 document.getElementById("username1").value='';
 document.getElementById("password1").value='';
 }, false);
-
 
 
 function formatBytes(bytes, decimals = 2) {
@@ -917,7 +851,6 @@ console.log("Decrypted:", decrypted);
 
 
 async function listRepoContents(owner, repo, path = '', token = '') {
-console.log('in',path);
   try {
     // Construct the GitHub API URL for the repository contents
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
@@ -1285,7 +1218,7 @@ async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content
   // Convert content to base64
   //const base64Content = btoa(content);
 
-  if(1) {
+  try {
     // Step 1: Check if the file exists to get its SHA (for updates)
     let sha = null;
     try {
@@ -1305,11 +1238,11 @@ async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content
       // If file doesn't exist (404), SHA remains null for new file creation
     } catch (error) {
       if (error.message.includes('404')) {
-        console.log('File does not exist, will create a new file.');
-		status_str='File does not already exist, will upload the new file.'
+		status_str='File does not already exist. its going to make a new file.'
 		let statusnow=Date().toString().substr(0,24)+', '+status_str;
 		span_status.innerHTML=statusnow;
 		statuspage_html+=statusnow+'<br>';
+		console.log(status_str);
       } else {
 		status_str='Error:'+error.message
 		let statusnow=Date().toString().substr(0,24)+', '+status_str;
@@ -1352,7 +1285,7 @@ async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content
 	span_status.innerHTML=statusnow;
 	statuspage_html+=statusnow+'<br>';
 	console.log(status_str)
-  } else {
+  } catch(error) {
 	status_str='Error:'+ error.message;
 	let statusnow=Date().toString().substr(0,24)+', '+status_str;
 	span_status.innerHTML=statusnow;
@@ -1412,6 +1345,13 @@ const mimeTypes = {
   return mimeTypes[extension] || 'application/octet-stream';
 }
 
+function store_current_path(){
+if(PageModeFlag==1){
+current_path_store[0]=current_path;
+} else if (PageModeFlag==2){
+current_path_store[1]=current_path;
+}
+}
 window.onload = async () => {
   try {
 	await open_function_1(starting_path_1);
