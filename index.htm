@@ -242,7 +242,7 @@ var path_status = document.getElementById('curpath_status');
 var filespage_html='';
 var statuspage_html='';
 var cryptpage_html='';
-var privatepage_html='';
+//var privatepage_html='';//its not needed
 var servepage_html='';
 var down_filename='';
 var selected_files=[];
@@ -317,33 +317,119 @@ document.head.appendChild(styleSheet);
 }
 
 function encode_filename(fname){
-if (PageModeFlag==2) {
+if (PageModeFlag==2) {//limit the fname to 192-4=188 chars. 4 chars is for extension .enc
+let len_limit=188;
+if (fname.length>len_limit){
+	let extra=fname.length-len_limit;
+	let splitted =fname.split('.');
+	if (splitted.length>1){
+		// to preserve the extension
+		ext=splitted.slice(-1)[0];
+		fname_t=fname.slice(0,-(ext.length+1));
+		if (fname_t.length>extra){
+			fname=fname_t.slice(0,extra)+'.'+ext;
+		} else {
+			fname=fname.slice(0,len_limit);
+		}
+	} else {
+		fname=fname.slice(0,len_limit);
+	}
+}
 let jsonString=sjcl.encrypt(password_comb,fname, sjcl_options);
 let jsonObject = JSON.parse(jsonString);
 name=jsonObject.ct;
 name=name.replace("/", "_");
+name=name+'.enc';
 return name;
 } else {
+// maximum filename length is 195 in windows 11.
+// ceil(195 / 3) * 4 = 260 base64 characters; to keep the output 255, input should be 192
+// limit the file name length to 192
+let len_limit=192;
+if (fname.length>len_limit){
+	let extra=fname.length-len_limit;
+	let splitted =fname.split('.');
+	if (splitted.length>1){
+		// to preserve the extension
+		ext=splitted.slice(-1)[0];
+		fname_t=fname.slice(0,-(ext.length+1));
+		if (fname_t.length>extra){
+			fname=fname_t.slice(0,extra)+'.'+ext;
+		} else {
+			fname=fname.slice(0,len_limit);
+		}
+	} else {
+		fname=fname.slice(0,len_limit);
+	}
+}
 return fname;
 }
 }
 
 function decode_filename(fname){
 if (PageModeFlag==2) {
-fname=fname.replace("_", "/");
-let name=sjcl.decrypt(password_comb,fname, sjcl_options);
+let splitted =fname.split('.');
+if (splitted.length>1){
+let ext=splitted.slice(-1)[0];
+let fname_t=fname.slice(0,-(ext.length+1));//removes extension
+} else {
+let fname_t=fname;
+}
+fname_t=fname_t.replace("_", "/");
+let name=sjcl.decrypt(password_comb,fname_t, sjcl_options);
 return name;
 } else {
 return fname;
 }
 }
 
+function encode_filecontent(fcontent){
+if (PageModeFlag==2) {
+let arrayBuffer =dataURIToArrayBuffer(fcontent);
+let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+let jsonString=sjcl.encrypt(password_comb,bitArray);
+// example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
+// let jsonObject = JSON.parse(jsonString);
+// ct=jsonObject.ct;
+let b64String=jsonString.replace("/", "_");
+//--- combine iv,salt,ct ---
+b64String=b64String.slice(7,7+24)+b64String.slice(116,116+12)+b64String.slice(136,-2);//let's hope it works.
+return b64String;
+} else {
+return fcontent;
+}
+}
+
+function decode_filecontent(fcontent){
+if (PageModeFlag==2) {
+let arrayBuffer =dataURIToArrayBuffer(fcontent);
+let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+let jsonString=sjcl.encrypt(password_comb,bitArray);
+// example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
+// let jsonObject = JSON.parse(jsonString);
+// ct=jsonObject.ct;
+let b64String=jsonString.replace("/", "_");
+//--- combine iv,salt,ct ---
+b64String=b64String.slice(7,7+24)+b64String.slice(116,116+12)+b64String.slice(136,-2);//let's hope it works.
+return b64String;
+} else {
+return fcontent;
+}
+}
+
+function dataURIToArrayBuffer(base64String) {
+  let binaryString = atob(base64String);
+  // Convert binary string to ArrayBuffer
+  let length = binaryString.length;
+  let arrayBuffer = new ArrayBuffer(length);
+  let uint8Array = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < length; i++) {
+    uint8Array[i] = binaryString.charCodeAt(i);
+  }
+  return arrayBuffer;
+}
 
 async function ButtonGroup1_Functions(){
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
 
 if (this.id=='createfo_a'){
 let folderName = prompt("enter folder name:", "new");
@@ -380,7 +466,8 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
       const base64String = e.target.result; // Full data URL (e.g., "data:image/png;base64,...")
       // To get only the Base64 part, remove the data URL prefix
       const base64Content = base64String.split(',')[1];
-	  await uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content);
+	  let encoded_b64=encode_filecontent(base64Content)
+	  await uploadFileToGitHub(owner,repo,filePath,branch,token,encoded_b64);
     };
     
     // Read the file as a Data URL (which includes Base64 encoding)
@@ -428,175 +515,42 @@ span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select d
 }
 
 async function Table1_Functions(filepath,filetype,rowId,columnIndex,identifier){
+if (filepath==''){throw new Error('empty filepath');}
+
 if (((columnIndex==2)|(columnIndex==5))&(filetype=='file')){
-await view_function(filepath);
-await ChangePageMode();
+	await view_function(filepath);
+	await ChangePageMode();
 }
 
 if ((columnIndex==2)&(filetype=='folder')){
-await open_function_1(filepath);
+	await open_function_1(filepath);
 }
 
 if ((columnIndex==6)&(filetype=='file')){
-await edit_function(filepath);
+	await edit_function(filepath);
 }
 
 if ((columnIndex==7)&(filetype=='file')){
-let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
-let oldname=filepath.split(/(\\|\/)/g).pop()
-let newname = prompt("enter file name:", oldname);
-if (newname!=null){
-let newPath = onlypath+'/'+newname;
-await renameGitHubFile(owner,repo,filepath,newPath,branch,token);
-await delayExecution(1000);//1 sec
-await open_function_1(current_path);
-}
+	if (did_loggedin){
+		let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
+		let oldname=filepath.split(/(\\|\/)/g).pop()
+		let newname = prompt("enter file name:", oldname);
+		if (newname!=null){
+			let newPath = onlypath+'/'+newname;
+			await renameGitHubFile(owner,repo,filepath,newPath,branch,token);
+			await delayExecution(1000);//1 sec
+			await open_function_1(current_path);
+		}
+	} else {
+		span_status.innerHTML=Date().toString().substr(0,24)+', '+'log in to rename the file.';
+	}
 }
 
 if ((columnIndex==8)&(filetype=='file')){
-await download_function(filepath);
+	await download_function(filepath);
 }
 }
 
-
-async function get_filespage(folderroot){
-
-var formdata1 = new FormData();
-formdata1.append('username1', username1);
-formdata1.append('password1', password1);
-formdata1.append('id', lgid);
-content={'operation': 'listdir','folderroot':folderroot};
-data=JSON.stringify(content);
-formdata1.append('data', data);
-fetch('ProcessAjaxRequest.php', {method:'post', body: formdata1})
-.then(response=>response.json())
-.then(async function(ContentRetrieved){ 
-if (ContentRetrieved['status']=='ok'){
-
-jdata=ContentRetrieved['data'];
-
-if (!PrivateMode_flag){
-
-filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
-for (let i=0;i<jdata[1].length;i++) {
-	let name=jdata[1][i];
-	let size='';
-	let mdate=jdata[4][i];
-	filespage_html+='<tr><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
-	+'<td><span id=\'a0_'+i+'\' class=\'act0\'><u>'+name+'</span></td><td></td><td>'+mdate+'</td>'
-	+'<td></td><td></td><td><span id=\"a3_'+i+'\" class=\'act3\'><u>rename</u></span></td>'
-	+'<td></td></tr>';
-}
-let N_folders=jdata[1].length;
-for (let i=0;i<jdata[2].length;i++) {
-	let name=jdata[2][i];
-	let size=formatBytes(jdata[3][i]);
-	let mdate=jdata[5][i];
-	filespage_html+='<tr><td>'+(N_folders+i+1)+'</td><td><input type="checkbox" id="'+(N_folders+i)+'" name="list_c" ></td>'
-	+'<td><span id=\'b0_'+i+'\' class=\'act0_1\' ><u>'+name+'</u></span></td><td>'+size+'</td><td>'+mdate+'</td>'
-	+'<td><span id=\'b1_'+i+'\' class=\'act1\'><u>view</u></span></td>'
-	+'<td><span id=\'b2_'+i+'\' class=\'act2\'><u>edit</u></span></td>'
-	+'<td><span id=\'b3_'+i+'\' class=\'act3\'><u>rename</u></span></td>'
-	+'<td><span id=\'b4_'+i+'\' class=\'act4\'><u>download</u></span></td></tr>';
-}
-filespage_html+='</table><br>';
-
-} else {
-cryptpage_html='';
-let pwout2= await get_CMode_password();
-if (pwout2[0]){
-let key=pwout2[1];
-var key_clone1=get_keyclone(key);
-
-//---to display folders----
-cryptpage_html='<input type="checkbox" id="selectall" name="select_all" ><label for="selectall"> SelectAll</label><br>'+
-'<table class=\"table_im\"><tr>';
-if(phonesite_flag){inter_str='</td><td>';} else {inter_str='<br>';}
-Lcount=0;
-for (let i=0;i<jdata[1].length;i++) {
-	let name=jdata[1][i];
-	let mdate=jdata[4][i];
-	cryptpage_html+=
-	'<td><div class="c_unit" id="cu_'+i+'" ><span id="a0_'+i+'" class="act0"><img loading="lazy" class="folder_img" alt="<image>" src=""></span>'
-	+inter_str
-	+'<input type="checkbox" id="'+i+'" name="list_c" ><label for="'+i+'"> Select</label><br>'
-	+'<b>Name:</b><span class="foldername"  >'+name+'</span><br>'
-	+'<b>ModifiedDate: </b>'+mdate+'<br>'
-	+'<span id=\"a3_'+i+'\" class=\'act3\'><u>Rename</u></span><br>'
-	+'</div></td>';
-	Lcount+=1;
-	if(phonesite_flag){
-	cryptpage_html+='</tr><tr>';
-	} else{
-	if ((Lcount)%6==0){cryptpage_html+='</tr><tr>';}
-	}
-}
-
-if(!phonesite_flag){
-if (Lcount<6){cryptpage_html+='<td>&nbsp;</td>'.repeat(6-Lcount);}
-}
-cryptpage_html+='</tr></table><br>';
-//---to display files----
-cryptpage_html+='<table class=\"table_im\"><tr>';
-let N_folders=jdata[1].length;
-if(phonesite_flag){inter_str='</td><td>';} else {inter_str='<br>';}
-Lcount=0;
-for (let i=0;i<jdata[2].length;i++) {
-	let s_id=N_folders+i;
-	let name=jdata[2][i];
-	let file_class='';
-	let last_7=name.slice(-7,).toLowerCase();
-	if(['_im.raw','_no.raw'].includes(last_7)){
-	let realname=await encbase64name2filename(name,key);
-	let ext=realname.split('.').slice(-1)[0].toLowerCase();
-	let srcstr='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-	if (last_7=='_im.raw'){
-	let ico_name=name.slice(0,-7)+'_ic.raw';
-	if (jdata[2].includes(ico_name)){
-		let idx=jdata[2].indexOf(ico_name);
-		let folderroot_cp=folderroot.slice();
-		folderroot_cp.push(idx);
-		[srcstr,ext2]=await getdownload_icon(folderroot_cp,key);
-	}
-	}
-	if(image_extensions.includes(ext)){file_class='image_file';} else {file_class='noimg_file';}
-	let size=formatBytes(jdata[3][i]);
-	let mdate=jdata[5][i];
-	cryptpage_html+=
-	'<td><div class="c_unit" id="cu_'+s_id+'" ><span id="b0_'+i+'" class="act0_1">'+
-	'<img loading="lazy" class="file_img '+file_class+'" alt="<image>" src="'+srcstr+'"></span>'
-	+inter_str
-	+'<input type="checkbox" id="'+s_id+'" name="list_c" ><label for="'+s_id+'"> Select</label><br>'
-	+'<b>Name: </b><span id="c0_'+i+'" class="filename" >'+realname+'</span><br>'
-	+'<b>OrigName: </b><span id="c1_'+i+'">'+name+'</span><br>'
-	+'<b>Size: </b>'+size+'<br>'
-	+'<b>ModifiedDate: </b>'+mdate+'<br>'
-	+'<span id=\"b2_'+i+'\" class=\'act2_2\'><u>Edit</u></span><br>'
-	+'<span id=\"b3_'+i+'\" class=\'act3\'><u>Rename</u></span><br>'
-	+'<span id=\"b4_'+i+'\" class=\'act4\'><u>Download</u></span><br>'
-	+'</div></td>';
-	Lcount+=1;
-	if(phonesite_flag){
-	cryptpage_html+='</tr><tr>';
-	} else{
-	if ((Lcount)%6==0){cryptpage_html+='</tr><tr>';}
-	}
-}
-}
-if(!phonesite_flag){
-if (Lcount<6){cryptpage_html+='<td>&nbsp;</td>'.repeat(6-Lcount);}
-}
-cryptpage_html+='</tr></table><br>';
-} else {span_status.innerHTML='CMode not on, due to password issues.';}
-
-}
-path_status.innerHTML=jdata[0];
-}
-
-statuspage_html+=Date().toString().substr(0,24)+' '+ContentRetrieved['statusstr']+'<br>'; 
-await ChangePageMode();
-	});
-}
 
 async function open_function_1(path){
 
@@ -607,17 +561,8 @@ if (PageModeFlag==1){
 for (let i=0;i<jdata.length;i++) {
 filenames_all[i]=jdata[i][0].split('\\').pop().split('/').pop();
 }
-} else if (PageModeFlag==2) {
-for (let i=0;i<jdata.length;i++) {
-let en_name=en_name.split('\\').pop().split('/').pop();
-en_name=jdata[i][0].replace("_", "/");
-let name=sjcl.decrypt(password_comb,en_name, sjcl_options);
-filenames_all[i]=name;
-}
-}
 //console.log('jdata',jdata)
 filespage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
-N_folders=0;
 for (let i=0;i<jdata.length;i++) {
 	if (jdata[i][1]=='folder'){
 	let name=filenames_all[i];
@@ -627,7 +572,6 @@ for (let i=0;i<jdata.length;i++) {
 	+'<td>'+name+'</td><td></td><td>'+mdate+'</td>'
 	+'<td></td><td></td><td></td>'
 	+'<td></td></tr>';
-	N_folders+=1;
 	}
 }
 for (let i=0;i<jdata.length;i++) {
@@ -644,6 +588,41 @@ for (let i=0;i<jdata.length;i++) {
 	}
 }
 filespage_html+='</table><br>';
+
+} else if (PageModeFlag==2) {
+for (let i=0;i<jdata.length;i++) {
+let en_name=jdata[i][0].split('\\').pop().split('/').pop();
+let name=decode_filename(en_name);
+filenames_all[i]=name;
+}
+//console.log('jdata',jdata)
+privatepage_html='<table id=\"table1\"><tr><th>No</th><th>selection<input type="checkbox" id="selectall" name="select_all" ></th><th>Name</th><th>Size</th><th>ModifiedDate</th><th>View</th><th>Edit</th><th>Rename</th><th>Download</th></tr>';
+for (let i=0;i<jdata.length;i++) {
+	if (jdata[i][1]=='folder'){
+	let name=filenames_all[i];
+	let size=formatBytes(jdata[i][2]);
+	let mdate=jdata[i][3];
+	privatepage_html+='<tr data-id="'+i+'" data-type="folder" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
+	+'<td>'+name+'</td><td></td><td>'+mdate+'</td>'
+	+'<td></td><td></td><td></td>'
+	+'<td></td></tr>';
+	}
+}
+for (let i=0;i<jdata.length;i++) {
+	if (jdata[i][1]=='file'){
+	let name=filenames_all[i];
+	let size=formatBytes(jdata[i][2]);
+	let mdate=jdata[i][3];
+	privatepage_html+='<tr data-id="'+i+'" data-type="file" data-path="'+jdata[i][0]+'"><td>'+(i+1)+'</td><td><input type="checkbox" id="'+i+'" name="list_c" ></td>'
+	+'<td><u>'+name+'</u></td><td>'+size+'</td><td>'+mdate+'</td>'
+	+'<td><u>view</u></td>'
+	+'<td><u>edit</u></td>'
+	+'<td><u>rename</u></td>'
+	+'<td><u>download</u></td></tr>';
+	}
+}
+privatepage_html+='</table><br>';
+}
 
 current_path=path;
 store_current_path();
@@ -737,46 +716,20 @@ for (var i = 0; i < checkboxes.length; i++) {
 }
 }
 
-function get_ico_indices(selected_files){
-let N_folders=jdata[1].length;
-let ico_idxs=[];
-for (var i = 0; i < selected_files.length; i++) {
-if (selected_files[i]>N_folders){
-var fname=jdata[2][selected_files[i]-N_folders];
-if (fname.slice(-7)=='_im.raw'){
-let ico_name=fname.slice(0,-7)+'_ic.raw';
-if (jdata[2].includes(ico_name)){
-let idx=jdata[2].indexOf(ico_name);
-if (!(selected_files.includes(N_folders+idx))){
-ico_idxs.push(N_folders+idx);
-}
-}
-}
-}
-}
-selected_files=selected_files.concat(ico_idxs);
-return selected_files;
-}
-
-async function open_function(){
-let id=this.id;
-if(id[0]=='a'){
-folderroot.push(parseInt(id.substr(3,) , 10));
-await get_filespage(folderroot);
-}
-}
 
 async function view_function(filepath){
 let filename=filepath.split('\\').pop().split('/').pop();;
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(image_extensions.includes(ext) || text_extensions.includes(ext))){
 let datestr=Date().toString().substr(0,24);
+back_button_function();
 span_status.innerHTML=datestr+', file format not viewable.';
 } else {
 
 var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token = '');
 mimeType = getMimeType(ext);
-var binaryString = atob(ResOut.content);
+let base64content=decode_filecontent(ResOut.content);
+var binaryString = atob(base64content);
 let statusnow=Date().toString().substr(0,24)+' file retrieved.';
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
@@ -796,13 +749,21 @@ text_ct=replaceAll(text_ct,'\'','&apos;');
 //text_ct=text_ct.replace('<br>', '\r\n<br>');
 text_ct='<button type="button" class="buttonhighlight_1" id="highlight_p" onclick="higlight_fn()" >CodeHighlight</button><pre><code>'+text_ct+'</code></pre>';
 
+if (PageModeFlag==1){
 filespage_html=text_ct;
+} else if (PageModeFlag==2){
+privatepage_html=text_ct;
+}
 path_status.innerHTML=filepath;
 } else if (image_extensions.includes(ext)) {
-filespage_html="<img src='data:"+mimeType+";base64,"+ResOut.content+"'>";
+if (PageModeFlag==1){
+filespage_html="<img src='data:"+mimeType+";base64,"+base64content+"'>";
+} else if (PageModeFlag==2){
+privatepage_html="<img src='data:"+mimeType+";base64,"+base64content+"'>";
+}
 path_status.innerHTML=filepath;
 } else {
-//filespage_html='file not displayed.';
+back_button_function();
 span_status.innerHTML=datestr+', file format not viewable.';
 }
 }
@@ -888,15 +849,7 @@ return [link,ext];
 
 
 document.getElementById('back_a').addEventListener('click', async function(){
-current_path=current_path.substring(0, current_path.lastIndexOf('/'));
-if (current_path==''){
-if (PageModeFlag==1){
-current_path=starting_path_1;
-} else if (PageModeFlag==2){
-current_path=starting_path_2;
-}
-}
-store_current_path();
+back_button_function();
 await open_function_1(current_path);
 }, false);
 
@@ -921,6 +874,18 @@ document.getElementById("username1").value='';
 document.getElementById("password1").value='';
 }, false);
 
+function back_button_function(){
+current_path=current_path.substring(0, current_path.lastIndexOf('/'));
+if (current_path==''){
+if (PageModeFlag==1){
+current_path=starting_path_1;
+} else if (PageModeFlag==2){
+current_path=starting_path_2;
+}
+}
+store_current_path();
+path_status.innerHTML=current_path;
+}
 
 function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 Bytes';
@@ -1451,7 +1416,6 @@ window.onload = async () => {
   try {
 	await open_function_1(starting_path_1);
 	//await ChangePageMode();
-
   } catch (error) {
     console.error('Error:', error);
   }
