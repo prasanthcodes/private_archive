@@ -6,7 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Private Web Portal.">
 <meta name="robots" content="noindex, nofollow">
-
+<!-- Meta tags to prevent caching -->
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+	
 <title>Private Web Portal</title>
 <style>
 
@@ -162,7 +166,7 @@ var encdata_1='{"iv":"XZtNavMPE0JcuiSu0YtkBQ==","v":1,"iter":10000,"ks":128,"ts"
 const customIV = "dGhpc2lzYXRlc3Rpdg=="; // Base64 for "thisisatestiv" (16 bytes)
 const ivBits = sjcl.codec.base64.toBits(customIV);
 // Define encryption options
-const sjcl_options = {mode: "ccm",iv: ivBits,ks: 128,ts: 64,iter: 1000,cipher: "aes"};
+const sjcl_options = {mode: "ccm",iv: ivBits,ks: 128,ts: 64,iter: 1000,cipher: "aes",salt:"yIJysHDWm3Q="};
 
 async function digestMessage(message) {
   const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
@@ -222,6 +226,7 @@ var branch = 'main';
 var token = '';
 var starting_path_1='public_files';
 var starting_path_2='private_files';
+var allowed_filenames=['.gitkeep','.gitignore'];
 
 
 var current_path='';
@@ -242,7 +247,7 @@ var path_status = document.getElementById('curpath_status');
 var filespage_html='';
 var statuspage_html='';
 var cryptpage_html='';
-//var privatepage_html='';//its not needed
+var privatepage_html='';//its not needed
 var servepage_html='';
 var down_filename='';
 var selected_files=[];
@@ -316,7 +321,16 @@ styleSheet.textContent = styles_2;
 document.head.appendChild(styleSheet);
 }
 
+function countChar(str, char) {
+  let count = 0;
+  for (let c of str) {
+    if (c === char) count++;
+  }
+  return count;
+}
+
 function encode_filename(fname){
+if (allowed_filenames.includes(fname)){return fname;}
 if (PageModeFlag==2) {//limit the fname to 192-4=188 chars. 4 chars is for extension .enc
 let len_limit=188;
 if (fname.length>len_limit){
@@ -367,16 +381,20 @@ return fname;
 }
 
 function decode_filename(fname){
+if (allowed_filenames.includes(fname)){return fname;}
+let fname_t='';
 if (PageModeFlag==2) {
 let splitted =fname.split('.');
 if (splitted.length>1){
 let ext=splitted.slice(-1)[0];
-let fname_t=fname.slice(0,-(ext.length+1));//removes extension
+fname_t=fname.slice(0,-(ext.length+1));//removes extension
 } else {
-let fname_t=fname;
+fname_t=fname;
 }
 fname_t=fname_t.replace("_", "/");
-let name=sjcl.decrypt(password_comb,fname_t, sjcl_options);
+let jsonString='{"iv":"dGhpc2lzYXRlc3Rpdg==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"yIJysHDWm3Q=","ct":"'+fname_t+'"}';
+console.log('jsonString:',jsonString)
+let name=sjcl.decrypt(password_comb,jsonString);
 return name;
 } else {
 return fname;
@@ -385,15 +403,30 @@ return fname;
 
 function encode_filecontent(fcontent){
 if (PageModeFlag==2) {
-let arrayBuffer =dataURIToArrayBuffer(fcontent);
-let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+//let arrayBuffer =dataURIToArrayBuffer(fcontent);
+//let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+let bitArray = sjcl.codec.base64.toBits(fcontent);
 let jsonString=sjcl.encrypt(password_comb,bitArray);
 // example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
 // let jsonObject = JSON.parse(jsonString);
 // ct=jsonObject.ct;
 let b64String=jsonString.replace("/", "_");
 //--- combine iv,salt,ct ---
-b64String=b64String.slice(7,7+24)+b64String.slice(116,116+12)+b64String.slice(136,-2);//let's hope it works.
+let part_1=b64String.slice(7,7+24);
+let part_2=b64String.slice(116,116+12);
+let part_3=b64String.slice(136,-2);
+let cou_1=countChar(part_1, "=");
+let cou_2=countChar(part_2, "=");
+let cou_3=countChar(part_3, "=");
+let part_0=String(cou_1)+String(cou_2)+String(cou_3)
+if (cou_1>0){part_1=part_1.slice(0,-cou_1);}
+if (cou_2>0){part_2=part_2.slice(0,-cou_2);}
+if (cou_3>0){part_3=part_3.slice(0,-cou_3);}
+b64String=part_0+part_1+part_2+part_3;
+let cou_f=countChar(b64String, "=");
+if (cou_f>0){b64String=b64String.slice(0,-cou_f);}
+let remain=b64String.length%4
+b64String=b64String+("=".repeat(remain));
 return b64String;
 } else {
 return fcontent;
@@ -402,15 +435,16 @@ return fcontent;
 
 function decode_filecontent(fcontent){
 if (PageModeFlag==2) {
-let arrayBuffer =dataURIToArrayBuffer(fcontent);
-let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+//let arrayBuffer =dataURIToArrayBuffer(fcontent);
+//let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+let bitArray = sjcl.codec.base64.toBits(fcontent);
 let jsonString=sjcl.encrypt(password_comb,bitArray);
 // example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
 // let jsonObject = JSON.parse(jsonString);
 // ct=jsonObject.ct;
 let b64String=jsonString.replace("/", "_");
 //--- combine iv,salt,ct ---
-b64String=b64String.slice(7,7+24)+b64String.slice(116,116+12)+b64String.slice(136,-2);//let's hope it works.
+b64String=b64String.slice(7,7+24)+b64String.slice(116,116+12)+b64String.slice(136,-2);
 return b64String;
 } else {
 return fcontent;
@@ -512,6 +546,7 @@ span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select d
 } else if (this.id=='paste_b'){
 
 }
+
 }
 
 async function Table1_Functions(filepath,filetype,rowId,columnIndex,identifier){
@@ -534,8 +569,10 @@ if ((columnIndex==7)&(filetype=='file')){
 	if (did_loggedin){
 		let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
 		let oldname=filepath.split(/(\\|\/)/g).pop()
+		oldname=decode_filename(oldname);
 		let newname = prompt("enter file name:", oldname);
 		if (newname!=null){
+			newname=encode_filename(newname);
 			let newPath = onlypath+'/'+newname;
 			await renameGitHubFile(owner,repo,filepath,newPath,branch,token);
 			await delayExecution(1000);//1 sec
@@ -593,6 +630,7 @@ filespage_html+='</table><br>';
 for (let i=0;i<jdata.length;i++) {
 let en_name=jdata[i][0].split('\\').pop().split('/').pop();
 let name=decode_filename(en_name);
+//name=en_name;
 filenames_all[i]=name;
 }
 //console.log('jdata',jdata)
@@ -645,7 +683,7 @@ current_path=current_path_store[1];
 path_status.innerHTML=current_path;
 viewcontent1.innerHTML=privatepage_html;
 span_currentpage.innerHTML='CurrentPage: PrivatePage';
-document.body.style.backgroundColor = "#ffe6ff";
+document.body.style.backgroundColor = "#ffe6ee";
 } else if (PageModeFlag==3) {
 viewcontent1.innerHTML=statuspage_html;
 span_currentpage.innerHTML='CurrentPage: StatusPage';
@@ -718,7 +756,8 @@ for (var i = 0; i < checkboxes.length; i++) {
 
 
 async function view_function(filepath){
-let filename=filepath.split('\\').pop().split('/').pop();;
+let filename=filepath.split('\\').pop().split('/').pop();
+filename=decode_filename(filename);
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(image_extensions.includes(ext) || text_extensions.includes(ext))){
 let datestr=Date().toString().substr(0,24);
@@ -770,7 +809,9 @@ span_status.innerHTML=datestr+', file format not viewable.';
 }
 
 async function edit_function(filePath){
-let ext=filePath.split('.').slice(-1)[0].toLowerCase();
+let filename=filepath.split('\\').pop().split('/').pop();
+filename=decode_filename(filename);
+let ext=filename.split('.').slice(-1)[0].toLowerCase();
 if (!(editable_formats.includes(ext))){
 let datestr=Date().toString().substr(0,24);
 span_status.innerHTML=datestr+', file format not editable.';
@@ -778,12 +819,20 @@ span_status.innerHTML=datestr+', file format not editable.';
 
 let fileData=await getGitHubFile(owner, repo, filePath, branch, token);
 if (fileData){
+if (PageModeFlag==1) {
 filespage_html="<label for='content'>content:</label><br><textarea id='content1' name='content1' rows='35' cols='100'></textarea><br><button id='edit_submit' onclick='update_function'>Submit</button>";
+} else if (PageModeFlag==2) {
+privatepage_html="<label for='content'>content:</label><br><textarea id='content1' name='content1' rows='35' cols='100'></textarea><br><button id='edit_submit' onclick='update_function'>Submit</button>";
+}
 ChangePageMode();
 document.getElementById('edit_submit').addEventListener('click', update_function, false);
-document.getElementById('content1').value=fileData.content;
+document.getElementById('content1').value=decode_filecontent(fileData.content);
 } else {
+if (PageModeFlag==1) {
 filespage_html="file not retrieved.";
+} else if (PageModeFlag==2) {
+privatepage_html="file not retrieved.";
+}
 ChangePageMode();
 }
 path_status.innerHTML=filepath;
@@ -794,6 +843,7 @@ async function update_function(){
 if (did_loggedin){
 let upcontent=document.getElementById('content1').value;
 let base64Content = btoa(upcontent);
+base64Content=encode_filecontent(base64Content);
 await uploadFileToGitHub(owner,repo,current_path,branch,token,base64Content);
 } else {
 span_status.innerHTML=Date().toString().substr(0,24)+', '+'log in to update the file.';
@@ -801,17 +851,18 @@ span_status.innerHTML=Date().toString().substr(0,24)+', '+'log in to update the 
 }
 
 async function download_function(filepath){
-let filename=filepath.split('\\').pop().split('/').pop();;
+let filename=filepath.split('\\').pop().split('/').pop();
+filename=decode_filename(filename);
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token = '');
 mimeType = getMimeType(ext);
-var binaryString = atob(ResOut.content);
+let base64content=decode_filecontent(ResOut.content);
+var binaryString = atob(base64content);
 const len = binaryString.length;
 const bytes = new Uint8Array(len);
 for (let i = 0; i < len; i++) {
   bytes[i] = binaryString.charCodeAt(i);
 }
-//var filedata = btoa(ResOut.content);
 const blob = new Blob([bytes],{ type: mimeType });
 var a = document.createElement("a");
 a.href = window.URL.createObjectURL(blob);
@@ -924,8 +975,10 @@ async function listRepoContents(owner, repo, path = '', token = '') {
       headers['Authorization'] = `token ${token}`;
     }
     
+	console.log('haha')
     // Make the API request for contents
     const response = await fetch(url, { headers });
+	console.log(response)
     
     // Check if the response is successful
     if (!response.ok) {
@@ -937,6 +990,7 @@ async function listRepoContents(owner, repo, path = '', token = '') {
     
     // Parse the JSON response
     const contents = await response.json();
+	console.log(contents)
 	let data_1=[];
 	let data_2=[];
 	let jdata=[];
@@ -960,6 +1014,7 @@ async function listRepoContents(owner, repo, path = '', token = '') {
       }
     }
 	jdata=data_1.concat(data_2);
+	console.log(contents)
 	return jdata;
   } catch (error) {
 	let error_str='Error fetching repository contents:'+ error.message;
@@ -1011,7 +1066,7 @@ async function getGitHubFileContent(owner, repo, path, branch, token = '') {
 				sha: data.sha,
             };
         } else {
-			let error_str='No content found in the response';
+			let error_str='file is empty.';
 			let statusnow=Date().toString().substr(0,24)+', '+error_str;
 			span_status.innerHTML=statusnow;
 			statuspage_html+=statusnow+'<br>';
@@ -1057,12 +1112,12 @@ async function getGitHubFile(owner, repo, path, branch, token = '') {
         // Parse the response
         const data = await response.json();
         // Decode the base64 content
-		decodedContent=''
+		FileContent='';
         if (data.content) {
-            decodedContent = atob(data.content.replace(/\n/g, ''));
+            FileContent=data.content.replace(/\n/g, '');
 		}
 		return {
-			content: decodedContent,
+			content: FileContent,
 			name: data.name,
 			path: data.path,
 			url: data.html_url,
