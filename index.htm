@@ -163,6 +163,7 @@ var did_loggedin=false;
 
 var stored_sha256={'1':{'1':'2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc420cb2e0','2':'f7b2205140f1dd73ed8a73950c94edb7bf2a0e34afec969b6a9533df0b490492'}};
 var encdata_1='{"iv":"XZtNavMPE0JcuiSu0YtkBQ==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"HNQnWZ4sjuw=","ct":"MCESbVsN+TsnCTJaT3HdWQfIxiRHDPFaShwT4AMOgMSOdAdmeNEETyAMFMQ/SuWuZByAxw4yEu7/VkY0LOe8WMUxRboBtsKLZN3r8aN/aNfflyKOCbtSyreNq2eHHWJXH+FQfR4="}'
+var templa_1='{"iv":"","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"","ct":""}'
 const customIV = "dGhpc2lzYXRlc3Rpdg=="; // Base64 for "thisisatestiv" (16 bytes)
 const ivBits = sjcl.codec.base64.toBits(customIV);
 // Define encryption options
@@ -438,7 +439,7 @@ if (PageModeFlag==2) {
 //let arrayBuffer =dataURIToArrayBuffer(fcontent);
 //let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 let bitArray = sjcl.codec.base64.toBits(fcontent);
-let jsonString=sjcl.encrypt(password_comb,bitArray);
+let jsonString=sjcl.decrypt(password_comb,bitArray);
 // example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
 // let jsonObject = JSON.parse(jsonString);
 // ct=jsonObject.ct;
