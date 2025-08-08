@@ -168,6 +168,7 @@ const customIV = "dGhpc2lzYXRlc3Rpdg=="; // Base64 for "thisisatestiv" (16 bytes
 const ivBits = sjcl.codec.base64.toBits(customIV);
 // Define encryption options
 const sjcl_options = {mode: "ccm",iv: ivBits,ks: 128,ts: 64,iter: 1000,cipher: "aes",salt:"yIJysHDWm3Q="};
+const sjcl_options_2 = {v:1,mode: "ccm",ks: 128,ts: 64,iter: 1000,cipher: "aes"};
 
 async function digestMessage(message) {
   const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
@@ -209,6 +210,11 @@ did_loggedin=true;
 document.getElementById('div_login').style.display = 'none';
 document.getElementById('topgroup_1').style.display = 'block';
 
+PageModeFlag=2;
+current_path=current_path_store[1];
+await open_function_1(current_path);
+
+PageModeFlag=1;
 await ChangePageMode();
 password_comb=username1+password1;
 //crypt_example();
@@ -407,15 +413,16 @@ if (PageModeFlag==2) {
 //let arrayBuffer =dataURIToArrayBuffer(fcontent);
 //let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 let bitArray = sjcl.codec.base64.toBits(fcontent);
-let jsonString=sjcl.encrypt(password_comb,bitArray);
-// example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
+let jsonString=sjcl.encrypt(password_comb,bitArray,sjcl_options_2);
+console.log('encjsonString',jsonString)
+// example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
 // let jsonObject = JSON.parse(jsonString);
 // ct=jsonObject.ct;
-let b64String=jsonString.replace("/", "_");
+let b64String=jsonString;//.replace("/", "_");
 //--- combine iv,salt,ct ---
 let part_1=b64String.slice(7,7+24);
-let part_2=b64String.slice(116,116+12);
-let part_3=b64String.slice(136,-2);
+let part_2=b64String.slice(115,115+12);
+let part_3=b64String.slice(135,-2);
 let cou_1=countChar(part_1, "=");
 let cou_2=countChar(part_2, "=");
 let cou_3=countChar(part_3, "=");
@@ -426,8 +433,9 @@ if (cou_3>0){part_3=part_3.slice(0,-cou_3);}
 b64String=part_0+part_1+part_2+part_3;
 let cou_f=countChar(b64String, "=");
 if (cou_f>0){b64String=b64String.slice(0,-cou_f);}
-let remain=b64String.length%4
-b64String=b64String+("=".repeat(remain));
+let remain=b64String.length%4;
+if (remain>0){b64String=b64String+("=".repeat(4-remain));}
+console.log(b64String)
 return b64String;
 } else {
 return fcontent;
@@ -436,17 +444,20 @@ return fcontent;
 
 function decode_filecontent(fcontent){
 if (PageModeFlag==2) {
-//let arrayBuffer =dataURIToArrayBuffer(fcontent);
-//let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
-let bitArray = sjcl.codec.base64.toBits(fcontent);
-let jsonString=sjcl.decrypt(password_comb,bitArray);
-// example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":10000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
-// let jsonObject = JSON.parse(jsonString);
-// ct=jsonObject.ct;
-let b64String=jsonString.replace("/", "_");
-//--- combine iv,salt,ct ---
-b64String=b64String.slice(7,7+24)+b64String.slice(116,116+12)+b64String.slice(136,-2);
-return b64String;
+let cou_f=countChar(fcontent, "=");
+if (cou_f>0){fcontent=fcontent.slice(0,-cou_f);}
+let part_0=fcontent.slice(0,3);
+fcontent=fcontent.slice(3,);
+let part_1=fcontent.slice(0,24-parseInt(part_0[0]))+("=".repeat(parseInt(part_0[0])));
+fcontent=fcontent.slice(24-parseInt(part_0[0]),);
+let part_2=fcontent.slice(0,12-parseInt(part_0[1]))+("=".repeat(parseInt(part_0[1])));
+fcontent=fcontent.slice(12-parseInt(part_0[1]),);
+let part_3=fcontent.slice(0,)+("=".repeat(parseInt(part_0[2])));
+let jsonString='{"iv":"'+part_1+'","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"'+part_2+'","ct":"'+part_3+'"}';
+console.log('dec_content:',jsonString)
+//jsonString=jsonString.replace("_", "/");
+let outString=sjcl.decrypt(password_comb,jsonString);
+return outString;
 } else {
 return fcontent;
 }
@@ -497,6 +508,7 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
     // When the file is read, this function is triggered
     reader.onload = async (e) => {
 	  //let fileName=e.name;
+	  fileName=encode_filename(fileName);
 	  let filePath=current_path+'/'+fileName
       const base64String = e.target.result; // Full data URL (e.g., "data:image/png;base64,...")
       // To get only the Base64 part, remove the data URL prefix
@@ -630,8 +642,8 @@ filespage_html+='</table><br>';
 } else if (PageModeFlag==2) {
 for (let i=0;i<jdata.length;i++) {
 let en_name=jdata[i][0].split('\\').pop().split('/').pop();
-let name=decode_filename(en_name);
-//name=en_name;
+//let name=decode_filename(en_name);
+name=en_name;
 filenames_all[i]=name;
 }
 //console.log('jdata',jdata)
@@ -666,7 +678,8 @@ privatepage_html+='</table><br>';
 current_path=path;
 store_current_path();
 path_status.innerHTML=path;
-statuspage_html+=Date().toString().substr(0,24)+' page loaded. path: '+path+'<br>'; 
+statuspage_html+=Date().toString().substr(0,24)+' page loaded. path: '+path+'<br>';
+await delayExecution(100);//100ms
 await ChangePageMode();
 }
 
