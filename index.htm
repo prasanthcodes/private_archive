@@ -210,16 +210,20 @@ did_loggedin=true;
 document.getElementById('div_login').style.display = 'none';
 document.getElementById('topgroup_1').style.display = 'block';
 
+password_comb=username1+password1;
+//crypt_example();
+token=sjcl.decrypt(password_comb, encdata_1);
+token=atob(token);
+//token='';
+
 PageModeFlag=2;
 current_path=current_path_store[1];
 await open_function_1(current_path);
 
 PageModeFlag=1;
+current_path=current_path_store[0];
 await ChangePageMode();
-password_comb=username1+password1;
-//crypt_example();
-token=sjcl.decrypt(password_comb, encdata_1);
-//token='';
+
 }
 }
 }
@@ -336,6 +340,30 @@ function countChar(str, char) {
   return count;
 }
 
+function base64ToBitArray(base64String) {
+  // Decode Base64 string to binary string
+  const binaryString = atob(base64String);
+  
+  // Convert binary string to array of bytes (bit array)
+  const bitArray = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bitArray[i] = binaryString.charCodeAt(i);
+  }
+  
+  return bitArray;
+}
+
+function bitArrayToBase64(bitArray) {
+  // Convert Uint8Array to binary string
+  let binaryString = '';
+  for (let i = 0; i < bitArray.length; i++) {
+    binaryString += String.fromCharCode(bitArray[i]);
+  }
+  
+  // Encode binary string to Base64
+  return btoa(binaryString);
+}
+
 function encode_filename(fname){
 if (allowed_filenames.includes(fname)){return fname;}
 if (PageModeFlag==2) {//limit the fname to 192-4=188 chars. 4 chars is for extension .enc
@@ -400,8 +428,9 @@ fname_t=fname;
 }
 fname_t=fname_t.replace("_", "/");
 let jsonString='{"iv":"dGhpc2lzYXRlc3Rpdg==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"yIJysHDWm3Q=","ct":"'+fname_t+'"}';
-console.log('jsonString:',jsonString)
-let name=sjcl.decrypt(password_comb,jsonString);
+//console.log('decode_filename jsonString:',jsonString)
+let b64name=sjcl.decrypt(password_comb,jsonString);
+let name=atob(b64name);
 return name;
 } else {
 return fname;
@@ -413,8 +442,9 @@ if (PageModeFlag==2) {
 //let arrayBuffer =dataURIToArrayBuffer(fcontent);
 //let bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 let bitArray = sjcl.codec.base64.toBits(fcontent);
+//let bitArray = base64ToBitArray(fcontent);
 let jsonString=sjcl.encrypt(password_comb,bitArray,sjcl_options_2);
-console.log('encjsonString',jsonString)
+//console.log('encode_filecontent jsonString',jsonString)
 // example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
 // let jsonObject = JSON.parse(jsonString);
 // ct=jsonObject.ct;
@@ -435,7 +465,6 @@ let cou_f=countChar(b64String, "=");
 if (cou_f>0){b64String=b64String.slice(0,-cou_f);}
 let remain=b64String.length%4;
 if (remain>0){b64String=b64String+("=".repeat(4-remain));}
-console.log(b64String)
 return b64String;
 } else {
 return fcontent;
@@ -454,12 +483,14 @@ let part_2=fcontent.slice(0,12-parseInt(part_0[1]))+("=".repeat(parseInt(part_0[
 fcontent=fcontent.slice(12-parseInt(part_0[1]),);
 let part_3=fcontent.slice(0,)+("=".repeat(parseInt(part_0[2])));
 let jsonString='{"iv":"'+part_1+'","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"'+part_2+'","ct":"'+part_3+'"}';
-console.log('dec_content:',jsonString)
+//console.log('decode_filecontent jsonString:',jsonString)
 //jsonString=jsonString.replace("_", "/");
-let outString=sjcl.decrypt(password_comb,jsonString);
-return outString;
+let outb64=sjcl.decrypt(password_comb,jsonString);
+return outb64;
+//return [outString,outb64];
 } else {
-return fcontent;
+var binaryString = atob(fcontent);
+return [binaryString,fcontent];
 }
 }
 
@@ -513,6 +544,7 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
       const base64String = e.target.result; // Full data URL (e.g., "data:image/png;base64,...")
       // To get only the Base64 part, remove the data URL prefix
       const base64Content = base64String.split(',')[1];
+	  //console.log('base64Content:',base64Content)
 	  let encoded_b64=encode_filecontent(base64Content)
 	  await uploadFileToGitHub(owner,repo,filePath,branch,token,encoded_b64);
     };
@@ -557,7 +589,7 @@ span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select d
 }
 }
 } else if (this.id=='paste_b'){
-
+span_status.innerHTML='paste operation not implemened.';
 }
 
 }
@@ -642,8 +674,8 @@ filespage_html+='</table><br>';
 } else if (PageModeFlag==2) {
 for (let i=0;i<jdata.length;i++) {
 let en_name=jdata[i][0].split('\\').pop().split('/').pop();
-//let name=decode_filename(en_name);
-name=en_name;
+let name=decode_filename(en_name);
+//name=en_name;
 filenames_all[i]=name;
 }
 //console.log('jdata',jdata)
@@ -717,9 +749,9 @@ for (var i = 0; i < checkboxes.length; i++) {
     checkboxes[i].checked=checkc1;
 }}, false);
 } catch {
-console.log('cbox1 not present error.');
+console.log('cbox1 not present error.(not created yet)');
 }
-
+try{
 const table = document.getElementById('table1');
 table.addEventListener('click', async (event) => {
 	const cell = event.target.closest('td');
@@ -738,6 +770,9 @@ table.addEventListener('click', async (event) => {
 		await Table1_Functions(filepath, filetype, rowId,  columnIndex,'');
 	}
 });
+} catch {
+console.log('table1 not present(not created yet).');
+}
 }
 }
 
@@ -779,10 +814,11 @@ back_button_function();
 span_status.innerHTML=datestr+', file format not viewable.';
 } else {
 
-var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token = '');
+var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token);
 mimeType = getMimeType(ext);
 let base64content=decode_filecontent(ResOut.content);
-var binaryString = atob(base64content);
+let binaryString=atob(base64content);
+//let base64content=btoa(binaryString);
 let statusnow=Date().toString().substr(0,24)+' file retrieved.';
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
@@ -840,7 +876,9 @@ privatepage_html="<label for='content'>content:</label><br><textarea id='content
 }
 ChangePageMode();
 document.getElementById('edit_submit').addEventListener('click', update_function, false);
-document.getElementById('content1').value=decode_filecontent(fileData.content);
+var base64content = decode_filecontent(fileData.content);
+let binaryString=atob(base64content);
+document.getElementById('content1').value=binaryString;
 } else {
 if (PageModeFlag==1) {
 filespage_html="file not retrieved.";
@@ -868,10 +906,10 @@ async function download_function(filepath){
 let filename=filepath.split('\\').pop().split('/').pop();
 filename=decode_filename(filename);
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
-var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token = '');
+var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token);
 mimeType = getMimeType(ext);
 let base64content=decode_filecontent(ResOut.content);
-var binaryString = atob(base64content);
+let binaryString=atob(base64content);
 const len = binaryString.length;
 const bytes = new Uint8Array(len);
 for (let i = 0; i < len; i++) {
@@ -963,18 +1001,19 @@ function formatBytes(bytes, decimals = 2) {
 
 
 function crypt_example(){
-const message = `"Hello, secure world!"`;
-const pwd = password_comb;
+var message = `"Hello, secure world!"`;
+var pwd = password_comb;
 //const bitArray = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
 var encrypted = sjcl.encrypt(pwd, message);
 //var jsObject = JSON.parse(encrypted);
 console.log("Encrypted:", encrypted);
-const decrypted = sjcl.decrypt(pwd, encrypted)
+var decrypted = sjcl.decrypt(pwd, encrypted)
+decrypted=atob(decrypted);
 console.log("Decrypted:", decrypted);
 }
 
 
-async function listRepoContents(owner, repo, path = '', token = '') {
+async function listRepoContents(owner, repo, path, token) {
   try {
     // Construct the GitHub API URL for the repository contents
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
@@ -989,10 +1028,9 @@ async function listRepoContents(owner, repo, path = '', token = '') {
       headers['Authorization'] = `token ${token}`;
     }
     
-	console.log('haha')
     // Make the API request for contents
     const response = await fetch(url, { headers });
-	console.log(response)
+	//console.log(response)
     
     // Check if the response is successful
     if (!response.ok) {
@@ -1004,7 +1042,7 @@ async function listRepoContents(owner, repo, path = '', token = '') {
     
     // Parse the JSON response
     const contents = await response.json();
-	console.log(contents)
+	//console.log(contents)
 	let data_1=[];
 	let data_2=[];
 	let jdata=[];
@@ -1028,7 +1066,7 @@ async function listRepoContents(owner, repo, path = '', token = '') {
       }
     }
 	jdata=data_1.concat(data_2);
-	console.log(contents)
+	//console.log(contents)
 	return jdata;
   } catch (error) {
 	let error_str='Error fetching repository contents:'+ error.message;
@@ -1039,7 +1077,7 @@ async function listRepoContents(owner, repo, path = '', token = '') {
 }
 
 // Function to fetch a file from GitHub
-async function getGitHubFileContent(owner, repo, path, branch, token = '') {
+async function getGitHubFileContent(owner, repo, path, branch, token) {
     try {
         // Construct the API URL
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
@@ -1095,7 +1133,7 @@ async function getGitHubFileContent(owner, repo, path, branch, token = '') {
     }
 }
 
-async function getGitHubFile(owner, repo, path, branch, token = '') {
+async function getGitHubFile(owner, repo, path, branch, token) {
     try {
         // Construct the API URL
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
@@ -1248,7 +1286,7 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
           Accept: "application/vnd.github.v3+json",
         },
         body: JSON.stringify({
-          message: `Rename ${oldPath} to ${newPath}`,
+          message: `Rename operation done.`,
           content: fileData.content,
           sha: fileData.sha,
           branch,
@@ -1382,7 +1420,7 @@ async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content
 
     // Step 2: Create or update the file
     const payload = {
-      message: `uploading ${filePath}`, // Commit message
+      message: `uploading done.`, // Commit message
       content: base64Content, // Base64-encoded content
 	  branch: branch,
     };
