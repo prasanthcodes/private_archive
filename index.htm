@@ -213,7 +213,6 @@ document.getElementById('topgroup_1').style.display = 'block';
 password_comb=username1+password1;
 //crypt_example();
 token=sjcl.decrypt(password_comb, encdata_1);
-token=atob(token);
 //token='';
 
 PageModeFlag=2;
@@ -429,8 +428,8 @@ fname_t=fname;
 fname_t=fname_t.replace("_", "/");
 let jsonString='{"iv":"dGhpc2lzYXRlc3Rpdg==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"yIJysHDWm3Q=","ct":"'+fname_t+'"}';
 //console.log('decode_filename jsonString:',jsonString)
-let b64name=sjcl.decrypt(password_comb,jsonString);
-let name=atob(b64name);
+let binaryName=sjcl.decrypt(password_comb,jsonString);
+let name=escape(binaryName);
 return name;
 } else {
 return fname;
@@ -490,7 +489,7 @@ return outb64;
 //return [outString,outb64];
 } else {
 var binaryString = atob(fcontent);
-return [binaryString,fcontent];
+return binaryString;
 }
 }
 
@@ -816,9 +815,9 @@ span_status.innerHTML=datestr+', file format not viewable.';
 
 var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token);
 mimeType = getMimeType(ext);
-let base64content=decode_filecontent(ResOut.content);
-let binaryString=atob(base64content);
-//let base64content=btoa(binaryString);
+let binaryString=decode_filecontent(ResOut.content);
+//console.log('binaryString:',binaryString)
+let base64content=btoa(binaryString);
 let statusnow=Date().toString().substr(0,24)+' file retrieved.';
 span_status.innerHTML=statusnow;
 statuspage_html+=statusnow+'<br>';
@@ -859,6 +858,7 @@ span_status.innerHTML=datestr+', file format not viewable.';
 }
 
 async function edit_function(filePath){
+	if (did_loggedin){
 let filename=filepath.split('\\').pop().split('/').pop();
 filename=decode_filename(filename);
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
@@ -876,8 +876,7 @@ privatepage_html="<label for='content'>content:</label><br><textarea id='content
 }
 ChangePageMode();
 document.getElementById('edit_submit').addEventListener('click', update_function, false);
-var base64content = decode_filecontent(fileData.content);
-let binaryString=atob(base64content);
+var binaryString = decode_filecontent(fileData.content);
 document.getElementById('content1').value=binaryString;
 } else {
 if (PageModeFlag==1) {
@@ -889,6 +888,9 @@ ChangePageMode();
 }
 path_status.innerHTML=filepath;
 }
+	} else {
+		span_status.innerHTML=Date().toString().substr(0,24)+', '+'log in to edit the file.';
+	}
 }
 
 async function update_function(){
@@ -908,8 +910,7 @@ filename=decode_filename(filename);
 let ext=filename.split('.').slice(-1)[0].toLowerCase();
 var ResOut = await getGitHubFileContent(owner, repo, filepath, branch, token);
 mimeType = getMimeType(ext);
-let base64content=decode_filecontent(ResOut.content);
-let binaryString=atob(base64content);
+let binaryString=decode_filecontent(ResOut.content);
 const len = binaryString.length;
 const bytes = new Uint8Array(len);
 for (let i = 0; i < len; i++) {
@@ -1008,7 +1009,7 @@ var encrypted = sjcl.encrypt(pwd, message);
 //var jsObject = JSON.parse(encrypted);
 console.log("Encrypted:", encrypted);
 var decrypted = sjcl.decrypt(pwd, encrypted)
-decrypted=atob(decrypted);
+decrypted=escape(decrypted);
 console.log("Decrypted:", decrypted);
 }
 
