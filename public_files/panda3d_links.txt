@@ -1,0 +1,51 @@
+
+3d models
+
+https://www.cgtrader.com/
+https://free3d.com
+
+view gltf models
+https://gltf.report/
+https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models
+
+
+360 panaromic space imgs
+https://www.eso.org/public/images/archive/category/360pano/list/2/
+
+
+game textures and sounds
+https://soundimage.org
+
+
+https://moguri.github.io/panda3d-simplepbr/features/
+
+https://soadzoor.github.io/Map-Merging-Tool/
+
+https://discourse.panda3d.org/t/new-panda-new-samples/24289/11
+https://discourse.panda3d.org/t/game-awakened-using-panda-rpg-engine/15292/6
+
+game sounds
+https://incompetech.com/music/royalty-free/full_list.php
+https://freesound.org/
+
+Create GitHub Resource Download Link
+https://downgit.github.io/#/home
+
+make space skybox images.
+http://alexcpeterson.com/spacescape/
+
+The SoftPixel Sandbox is an open-source 3D world editor. It is designed to be used particular in combination with the SoftPixel Engine.
+https://sourceforge.net/projects/softpixeleditor/
+
+from panda3d forum
+
+http://www.bencloward.com/resources_shaders.shtml
+https://wiki.ogre3d.org/PerPixel+Lighting+II
+
+analyze GitHub repo
+https://ossinsight.io/analyze/prasanthcodes
+
+indie game "love" and 3d modeler
+https://www.quelsolaar.com/love/index.html
+
+
