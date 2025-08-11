@@ -1,0 +1,136 @@
+
+https://www.geeksforgeeks.org/face-recognition-with-local-binary-patterns-lbps-and-opencv/
+
+HD video samples
+https://kodi.wiki/view/Samples
+
+x265 binaries for Windows
+http://msystem.waw.pl/x265/
+
+https://github.com/strukturag/LAVFilters/releases
+
+photo editor
+https://openart.ai
+
+VRT: A Video Restoration Transformer
+https://github.com/JingyunLiang/VRT
+
+https://fal.ai/models/fal-ai/aura-flow
+
+speech to speech translation SMT LAB - IIT MADRAS
+https://asr.iitm.ac.in/demo/tts
+
+
+https://huggingface.co/CompVis/stable-diffusion#model-access
+
+Immersive Light Field Video with a Layered Mesh Representation
+https://augmentedperception.github.io/deepviewvideo/
+
+https://discuss.huggingface.co/t/generating-and-saving-multiple-images-using-img2img-pipeline/30929/6
+
+
+https://www.i2ocr.com/free-online-tamil-ocr#
+
+https://www.myfreeocr.com/tamil-ocr
+
+
+https://huggingface.co/spaces/nightfury/Colorizer_Models
+
+https://huggingface.co/spaces/aryadytm/photo-colorization
+
+https://huggingface.co/spaces/jasperai/Flux.1-dev-Controlnet-Upscaler
+
+
+tesseract(image to text ocr software) download
+https://digi.bib.uni-mannheim.de/tesseract/?source=post_page-----4f7930313f82--------------------------------
+
+
+torch for cuda 12
+https://download.pytorch.org/whl/cu121/torch-2.1.2%2Bcu121-cp310-cp310-win_amd64.whl
+
+
+image to video
+https://huggingface.co/spaces/THUDM/CogVideoX-5B-Space
+
+image to 3d rotation
+https://huggingface.co/spaces/fffiloni/DimensionX
+
+image,video chat explain
+https://huggingface.co/spaces/omni-research/Tarsier2-7b
+
+
+cut object using ai
+https://huggingface.co/spaces/fantos/textcutobject
+
+
+interactive 3d model viewer online code
+https://modelviewer.dev/
+
+
+site: 1
+https://tafcop.dgtelecom.gov.in/
+to check all phone numbers associated with your phone number
+
+https://haveibeenpwned.com/
+to check whether y mail address hacked
+
+
+
+chernobyl explained
+https://youtu.be/P3oKNE72EzU?si=f9IBjvVhRO1SsvUi
+
+https://github.com/Bidur-Khanal/Raspberry-Pi-zero-camera-motion-detection-and-home-surveillance/blob/master/detection_iframe.py
+
+https://github.com/Kishanjaisoorya/SmartGuard/blob/main/GuardianVision/code.py#L106C4-L106C25
+
+MIT-BIH Long-Term ECG Database
+https://physionet.org/content/ltdb/1.0.0/
+
+
+
+background removal
+https://huggingface.co/spaces/not-lain/background-removal
+https://huggingface.co/spaces/briaai/BRIA-RMBG-2.0
+
+image to 3d
+https://huggingface.co/spaces/gdTharusha/3D-Modle-Generator
+
+quality mesh but no color
+https://huggingface.co/spaces/Stable-X/Hi3DGen
+
+fast process and color but low quality
+https://huggingface.co/spaces/TencentARC/InstantMesh
+
+remove specular reflections from images
+https://huggingface.co/spaces/Stable-X/StableDelight
+
+robo png transparent
+https://www.pngall.com/robot-png/download/22221/
+
+trellis img to 3d ai
+https://colab.research.google.com/drive/1XnIcTUGmCtt3v0ab5_9ENQEJyY4vtDnZ?usp=sharing#scrollTo=hSwZbKUXvnef
+
+mesh polycon count reduction
+https://myminifactory.github.io/Fast-Quadric-Mesh-Simplification/
+
+captioning
+https://huggingface.co/spaces/fancyfeast/joy-caption-alpha-two
+
+image outpaining
+https://huggingface.co/spaces/jozee/outpainting-image
+
+image quality and resolution enhance
+https://huggingface.co/spaces/finegrain/finegrain-image-enhancer
+
+pbr generator ML
+https://github.com/aaf6aa/PBRnxt
+https://github.com/texturedesign/texturize
+
+
+https://github.com/kg-git-dev/trellis-refactored/
+https://github.com/microsoft/TRELLIS/issues/38
+https://github.com/microsoft/TRELLIS/issues/42
+
+
+
+
