@@ -131,6 +131,7 @@ LastStatus: <span id="span_status"></span>
 <div id="topgroup_3">
 <button type="button" id="back_a">Back</button>
 <button type="button" id="home_a">Home</button>
+<button type="button" id="refresh_a">Refresh</button>
 CurrentPath: <span id="curpath_status">txtdata</span>
 <br>
 </div>
@@ -636,7 +637,7 @@ if ((columnIndex==8)&(filetype=='file')){
 async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
-await delayExecution(1000);//1 sec
+await delayExecution(100);//100 ms
 let filenames_all=[];
 if (PageModeFlag==1){
 for (let i=0;i<jdata.length;i++) {
@@ -967,6 +968,12 @@ current_path=starting_path_2;
 store_current_path();
 await open_function_1(current_path);
 }, false);
+
+document.getElementById('refresh_a').addEventListener('click', async function(){
+await open_function_1(current_path);
+}, false);
+
+
 
 document.getElementById('logout_a').addEventListener('click', function(){
 did_loggedin=false;
