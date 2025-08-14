@@ -215,7 +215,7 @@ password_comb=username1+password1;
 //crypt_example();
 token=sjcl.decrypt(password_comb, encdata_1);
 //token='';
-
+/*
 PageModeFlag=2;
 current_path=current_path_store[1];
 await open_function_1(current_path);
@@ -223,6 +223,7 @@ await open_function_1(current_path);
 PageModeFlag=1;
 current_path=current_path_store[0];
 await ChangePageMode();
+*/
 
 }
 }
@@ -387,7 +388,7 @@ if (fname.length>len_limit){
 let jsonString=sjcl.encrypt(password_comb,fname, sjcl_options);
 let jsonObject = JSON.parse(jsonString);
 name=jsonObject.ct;
-name=name.replace("/", "_");
+name=name.replaceAll("/", "_");
 name=name+'.enc';
 return name;
 } else {
@@ -426,7 +427,7 @@ fname_t=fname.slice(0,-(ext.length+1));//removes extension
 } else {
 fname_t=fname;
 }
-fname_t=fname_t.replace("_", "/");
+fname_t=fname_t.replaceAll("_", "/");
 let jsonString='{"iv":"dGhpc2lzYXRlc3Rpdg==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"yIJysHDWm3Q=","ct":"'+fname_t+'"}';
 //console.log('decode_filename jsonString:',jsonString)
 let binaryName=sjcl.decrypt(password_comb,jsonString);
@@ -448,7 +449,7 @@ let jsonString=sjcl.encrypt(password_comb,bitArray,sjcl_options_2);
 // example: '{"iv":"3p7eoJyfoDU8KMgps1osEw==","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"0fgdbFNWvXQ=","ct":"9S087hI3u+/lk7XD"}'
 // let jsonObject = JSON.parse(jsonString);
 // ct=jsonObject.ct;
-let b64String=jsonString;//.replace("/", "_");
+let b64String=jsonString;
 //--- combine iv,salt,ct ---
 let part_1=b64String.slice(7,7+24);
 let part_2=b64String.slice(115,115+12);
@@ -484,7 +485,6 @@ fcontent=fcontent.slice(12-parseInt(part_0[1]),);
 let part_3=fcontent.slice(0,)+("=".repeat(parseInt(part_0[2])));
 let jsonString='{"iv":"'+part_1+'","v":1,"iter":1000,"ks":128,"ts":64,"mode":"ccm","adata":"","cipher":"aes","salt":"'+part_2+'","ct":"'+part_3+'"}';
 //console.log('decode_filecontent jsonString:',jsonString)
-//jsonString=jsonString.replace("_", "/");
 let outb64=sjcl.decrypt(password_comb,jsonString);
 return outb64;
 //return [outString,outb64];
@@ -539,14 +539,16 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
     // When the file is read, this function is triggered
     reader.onload = async (e) => {
 	  //let fileName=e.name;
+	  console.log('uploaded fileName:',fileName)
 	  fileName=encode_filename(fileName);
 	  let filePath=current_path+'/'+fileName
+	  console.log('encoded filePath:',filePath)
       const base64String = e.target.result; // Full data URL (e.g., "data:image/png;base64,...")
       // To get only the Base64 part, remove the data URL prefix
       const base64Content = base64String.split(',')[1];
 	  //console.log('base64Content:',base64Content)
 	  let encoded_b64=encode_filecontent(base64Content)
-	  await uploadFileToGitHub(owner,repo,filePath,branch,token,encoded_b64);
+	  //await uploadFileToGitHub(owner,repo,filePath,branch,token,encoded_b64);
     };
     
     // Read the file as a Data URL (which includes Base64 encoding)
@@ -612,6 +614,7 @@ if ((columnIndex==6)&(filetype=='file')){
 
 if ((columnIndex==7)&(filetype=='file')){
 	if (did_loggedin){
+		console.log('filepath in rename:',filepath)
 		let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
 		let oldname=filepath.split(/(\\|\/)/g).pop()
 		oldname=decode_filename(oldname);
@@ -637,6 +640,7 @@ if ((columnIndex==8)&(filetype=='file')){
 async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
+console.log(jdata);
 await delayExecution(100);//100 ms
 let filenames_all=[];
 if (PageModeFlag==1){
@@ -675,6 +679,7 @@ filespage_html+='</table><br>';
 for (let i=0;i<jdata.length;i++) {
 let en_name=jdata[i][0].split('\\').pop().split('/').pop();
 let name=decode_filename(en_name);
+console.log(name)
 //name=en_name;
 filenames_all[i]=name;
 }
@@ -1117,7 +1122,7 @@ async function getGitHubFileContent(owner, repo, path, branch, token) {
         const data = await response.json();
         // Decode the base64 content
         if (data.content) {
-			let FileContent=data.content.replace(/\n/g, '');//base64 data
+			let FileContent=data.content.replaceAll(/\n/g, '');//base64 data
             return {
                 content: FileContent,
                 name: data.name,
@@ -1174,7 +1179,7 @@ async function getGitHubFile(owner, repo, path, branch, token) {
         // Decode the base64 content
 		FileContent='';
         if (data.content) {
-            FileContent=data.content.replace(/\n/g, '');
+            FileContent=data.content.replaceAll(/\n/g, '');
 		}
 		return {
 			content: FileContent,
@@ -1286,7 +1291,7 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
 	if (response.ok){
     // Step 2: Create file with new name
     const response2 = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${newPath}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${newPath}?ref=${branch}`,
       {
         method: "PUT",
         headers: {
@@ -1306,7 +1311,7 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
 	if (response2j.ok){
     // Step 3: Delete old file
     const response3 = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${oldPath}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${oldPath}?ref=${branch}`,
       {
         method: "DELETE",
         headers: {
@@ -1470,7 +1475,7 @@ async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content
 
 function getMimeType(extension) {
   // Remove leading dot if present
-  extension = extension.replace(/^\./, '').toLowerCase();
+  extension = extension.replaceAll(/^\./, '').toLowerCase();
   
 const mimeTypes = {
     // Code
