@@ -539,10 +539,10 @@ for (let fno = 0; fno < uploadbrowse.files.length; fno++) {
     // When the file is read, this function is triggered
     reader.onload = async (e) => {
 	  //let fileName=e.name;
-	  console.log('uploaded fileName:',fileName)
+	  //console.log('uploaded fileName:',fileName)
 	  fileName=encode_filename(fileName);
 	  let filePath=current_path+'/'+fileName
-	  console.log('encoded filePath:',filePath)
+	  //console.log('encoded filePath:',filePath)
       const base64String = e.target.result; // Full data URL (e.g., "data:image/png;base64,...")
       // To get only the Base64 part, remove the data URL prefix
       const base64Content = base64String.split(',')[1];
@@ -614,7 +614,7 @@ if ((columnIndex==6)&(filetype=='file')){
 
 if ((columnIndex==7)&(filetype=='file')){
 	if (did_loggedin){
-		console.log('filepath in rename:',filepath)
+		//console.log('filepath in rename:',filepath)
 		let onlypath = filepath.substring(0, filepath.lastIndexOf("/"));
 		let oldname=filepath.split(/(\\|\/)/g).pop()
 		oldname=decode_filename(oldname);
@@ -640,7 +640,7 @@ if ((columnIndex==8)&(filetype=='file')){
 async function open_function_1(path){
 
 jdata = await listRepoContents(owner, repo, path, token);
-console.log(jdata);
+//console.log(jdata);
 await delayExecution(100);//100 ms
 let filenames_all=[];
 if (PageModeFlag==1){
@@ -679,7 +679,7 @@ filespage_html+='</table><br>';
 for (let i=0;i<jdata.length;i++) {
 let en_name=jdata[i][0].split('\\').pop().split('/').pop();
 let name=decode_filename(en_name);
-console.log(name)
+//console.log(name)
 //name=en_name;
 filenames_all[i]=name;
 }
