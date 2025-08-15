@@ -568,10 +568,10 @@ span_status.innerHTML=Date().toString().substr(0,24)+', '+'no files selected.';
 } else {
 for (let i=0;i<selected_files.length;i++) {
 await deleteGitHubFile(owner,repo,selected_files[i],branch,token);
-await delayExecution(1000);//1 sec
-await open_function_1(current_path);
+await delayExecution(100);//100 ms
 statuspage_html+=Date().toString().substr(0,24)+', file: '+selected_files[i]+' deleted.'+'<br>';
 }
+await open_function_1(current_path);
 span_status.innerHTML=Date().toString().substr(0,24)+', '+'deleting operation finished.';
 statuspage_html+=Date().toString().substr(0,24)+', '+'deleting operation finished.'+'<br>';
 }
@@ -1029,7 +1029,7 @@ console.log("Decrypted:", decrypted);
 async function listRepoContents(owner, repo, path, token) {
   try {
     // Construct the GitHub API URL for the repository contents
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
     
     // Set up headers for the API request
     const headers = {
@@ -1176,6 +1176,7 @@ async function getGitHubFile(owner, repo, path, branch, token) {
         
         // Parse the response
         const data = await response.json();
+		console.log('response data:',data)
         // Decode the base64 content
 		FileContent='';
         if (data.content) {
@@ -1207,7 +1208,7 @@ async function createFolderInGitHub(owner,repo,folderName,branch,token) {
   const message = 'Create a new folder';
   //const branch = 'main'; // Replace with your target branch (e.g., 'master' or 'main')
 
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${folderPath}`;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${folderPath}?ref=${branch}`;
 
   const response = await fetch(url, {
     method: 'PUT',
@@ -1242,7 +1243,7 @@ console.log(statusnow);
 async function createFileInGitHub(owner,repo,fileName,branch,token) {
   const content = ''; // Base64 encode the file content
   const message = 'Create a new file';
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}?ref=${branch}`;
 
   const response = await fetch(url, {
     method: 'PUT',
@@ -1302,22 +1303,23 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
           message: `Rename operation done.`,
           content: fileData.content,
           sha: fileData.sha,
-          branch,
         }),
       }
     );
 	
 	const response2j = await response2.json();
-	if (response2j.ok){
+	console.log('response2j:',response2j)
+	if (response2.ok){
     // Step 3: Delete old file
     const response3 = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/contents/${oldPath}?ref=${branch}`,
       {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github.v3+json",
-        },
+		  headers: {
+			'Authorization': `Bearer ${token}`,
+			'Accept': 'application/vnd.github.v3+json',
+			'Content-Type': 'application/json',
+		  },
         body: JSON.stringify({
           message: `Delete ${oldPath} after rename`,
           sha: fileData.sha,
@@ -1326,7 +1328,8 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
       }
     );
 	const response3j = await response3.json();
-	if (response3j.ok){
+	console.log('response3j:',response3j)
+	if (response3.ok){
 		status_str=`File renamed from ${oldPath} to ${newPath}`;
 		let statusnow=Date().toString().substr(0,24)+', '+status_str;
 		span_status.innerHTML=statusnow;
@@ -1355,7 +1358,7 @@ async function renameGitHubFile(owner,repo,oldPath,newPath,branch,token) {
 }
 
 async function deleteGitHubFile(owner,repo,filePath,branch,token) {
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`;
   try {
 	var ResOut = await getGitHubFile(owner, repo, filepath, branch);
     const deleteResponse = await fetch(apiUrl, {
@@ -1392,7 +1395,7 @@ async function deleteGitHubFile(owner,repo,filePath,branch,token) {
 }
 
 async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content) {
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`;
 
   // Convert content to base64
   //const base64Content = btoa(content);
@@ -1475,7 +1478,7 @@ async function uploadFileToGitHub(owner,repo,filePath,branch,token,base64Content
 
 function getMimeType(extension) {
   // Remove leading dot if present
-  extension = extension.replaceAll(/^\./, '').toLowerCase();
+  extension = extension.replace(/^\./, '').toLowerCase();
   
 const mimeTypes = {
     // Code
