@@ -620,7 +620,9 @@ statuspage_html+=Date().toString().substr(0,24)+', '+'deleting operation finishe
 } else if (this.id=='move_a'){
 span_status.innerHTML='move operation not implemened.';
 
-} else if (this.id=='copy_b'){
+} else if (this.id=='copy_a'){
+span_status.innerHTML='copy operation not implemened.';
+/*
 getselectedfiles();
 if (folder_selected_flag){
 span_status.innerHTML=Date().toString().substr(0,24)+', '+'folders are not movable.';
@@ -631,7 +633,8 @@ span_status.innerHTML='no files selected.';
 span_status.innerHTML=selected_files_mvcp.length+' items ready to copy. select destination directory and click paste button.';
 }
 }
-} else if (this.id=='paste_b'){
+*/
+} else if (this.id=='paste_a'){
 span_status.innerHTML='paste operation not implemened.';
 }
 
