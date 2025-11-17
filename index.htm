@@ -117,6 +117,7 @@ button:active {
 <button type="button" class="buttongroup_1" id="paste_a">Paste</button>
 <button type="button" class="buttongroup_1" id="delete_a">Delete</button>
 <button type="button" class="buttongroup_1" id="logout_a">Logout</button>
+<button type="button" class="buttongroup_1" id="deploy_a">Deploy</button>
 <br>
 </div>
 <div id="topgroup_2">
@@ -1029,6 +1030,42 @@ document.getElementById('refresh_a').addEventListener('click', async function(){
 await open_function_1(current_path);
 }, false);
 
+
+var deploy_btn=document.getElementById('deploy_a');
+deploy_btn.addEventListener('click', async () => {
+
+      deploy_btn.disabled = true;
+		let statusnow=Date().toString().substr(0,24)+', '+'Triggering deployment...';
+		span_status.innerHTML=statusnow;
+		statuspage_html+=statusnow+'<br>';
+
+      try {
+        const response = await fetch('https://api.github.com/repos/${owner}/${repo}/actions/workflows/deploy.yml/dispatches', {
+          method: 'POST',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ref: 'main' })
+        });
+
+        if (response.ok) {
+			let statusnow=Date().toString().substr(0,24)+', '+'Deployment triggered! Check GitHub Actions.';
+			span_status.innerHTML=statusnow;
+			statuspage_html+=statusnow+'<br>';
+          setTimeout(() => location.reload(), 3000);
+        } else {
+          throw new Error('Failed: ' + response.status);
+        }
+      } catch (err) {
+			let statusnow=Date().toString().substr(0,24)+', '+'Error: ' + err.message;
+			span_status.innerHTML=statusnow;
+			statuspage_html+=statusnow+'<br>';
+        console.error(err);
+        deploy_btn.disabled = false;
+      }
+    });
 
 
 document.getElementById('logout_a').addEventListener('click', function(){
