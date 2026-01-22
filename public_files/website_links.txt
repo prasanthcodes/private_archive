@@ -29,11 +29,6 @@ https://augmentedperception.github.io/deepviewvideo/
 https://discuss.huggingface.co/t/generating-and-saving-multiple-images-using-img2img-pipeline/30929/6
 
 
-https://www.i2ocr.com/free-online-tamil-ocr#
-
-https://www.myfreeocr.com/tamil-ocr
-
-
 https://huggingface.co/spaces/nightfury/Colorizer_Models
 
 https://huggingface.co/spaces/aryadytm/photo-colorization
