@@ -72,7 +72,7 @@ to check whether y mail address hacked
 
 
 chernobyl explained
-https://youtu.be/P3oKNE72EzU?si=f9IBjvVhRO1SsvUi
+https://youtu.be/P3oKNE72EzU
 
 https://github.com/Bidur-Khanal/Raspberry-Pi-zero-camera-motion-detection-and-home-surveillance/blob/master/detection_iframe.py
 
