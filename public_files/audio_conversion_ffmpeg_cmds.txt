@@ -1,0 +1,22 @@
+sterio to mono
+ffmpeg -i freesounds123-heavy-character-walk-363348.mp3 -ac 1 mono.mp3
+
+mp3 to ogg
+ffmpeg -i input.mp3 -acodec libvorbis output.ogg
+
+mp3 to wav
+ffmpeg -i input.mp3 -ar 44100 -ac 2 output.wav
+
+What these flags do:
+
+    -i input.mp3: Identifies your source file.
+    -ar 44100: Sets the audio sampling rate to 44.1 kHz (standard CD quality).
+    -ac 2: Ensures the output is stereo (2 channels). Use -ac 1 if you want mono.
+
+powershell command to convert all mp3 files in a folder to wav file
+foreach ($i in Get-ChildItem *.mp3) { ffmpeg -i $i -ar 44100 ( $i.BaseName + ".wav") }
+
+powershell command to convert all mp3 files in a folder to ogg file
+foreach ($i in Get-ChildItem *.mp3) { ffmpeg -i $i -acodec libvorbis ( $i.BaseName + ".ogg") }
+
+
